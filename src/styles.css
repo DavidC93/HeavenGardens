@@ -1,0 +1,48 @@
+:root {
+  color-scheme: dark;
+  font-family: Arial, "Segoe UI", sans-serif;
+  background: #0d0f16;
+  color: #f4f6ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(239, 71, 111, 0.2), transparent 28%),
+    radial-gradient(circle at 86% 92%, rgba(17, 138, 178, 0.2), transparent 30%),
+    #0d0f16;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.shell,
+.game-stage,
+.game-frame {
+  width: 100vw;
+  height: 100vh;
+}
+
+.shell {
+  overflow: hidden;
+}
+
+.game-stage {
+  background: #0d0f16;
+}
+
+.game-frame {
+  display: block;
+  border: 0;
+}
