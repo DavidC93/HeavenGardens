@@ -2456,6 +2456,8 @@
     .card.monster-framed .frame-cost {
       transform: translate(var(--layout-cost-x), var(--layout-cost-y)) !important;
       font-size: var(--layout-cost-size) !important;
+      width: max(14px, calc(34px + var(--layout-costBoxW-w, 0px))) !important;
+      height: max(14px, calc(34px + var(--layout-costBoxH-h, 0px))) !important;
     }
 
     .card.monster-framed .frame-art {
@@ -3653,6 +3655,8 @@
     .card.spell-framed .spell-frame-cost {
       transform: translate(var(--spell-layout-cost-x), var(--spell-layout-cost-y)) !important;
       font-size: var(--spell-layout-cost-size) !important;
+      width: max(14px, calc(34px + var(--layout-spellCostBoxW-w, 0px))) !important;
+      height: max(14px, calc(34px + var(--layout-spellCostBoxH-h, 0px))) !important;
     }
 
     .card.spell-framed .spell-frame-art {
@@ -6177,8 +6181,9 @@
       .card.monster-framed .frame-cost {
         transform: translate(var(--mobile-layout-cost-x, var(--layout-cost-x)), var(--mobile-layout-cost-y, var(--layout-cost-y))) !important;
         font-size: var(--mobile-layout-cost-size, var(--layout-cost-size)) !important;
-        min-width: calc(21px + var(--mobile-layout-costBoxW-w, 0px)) !important;
-        height: calc(21px + var(--mobile-layout-costBoxH-h, 0px)) !important;
+        width: max(12px, calc(21px + var(--mobile-layout-costBoxW-w, 0px))) !important;
+        min-width: 0 !important;
+        height: max(12px, calc(21px + var(--mobile-layout-costBoxH-h, 0px))) !important;
       }
 
       .card.monster-framed .frame-art {
@@ -6189,14 +6194,14 @@
         font-size: var(--mobile-layout-art-size, var(--layout-art-size)) !important;
       }
 
-      .card.monster-framed .race-chip {
+      .card.monster-framed .frame-chip.race-chip {
         transform: translate(var(--mobile-layout-race-x, var(--layout-race-x)), var(--mobile-layout-race-y, var(--layout-race-y))) !important;
         font-size: var(--mobile-layout-race-size, var(--layout-race-size)) !important;
         min-width: calc(24px + var(--mobile-layout-raceBoxW-w, 0px)) !important;
         min-height: calc(12px + var(--mobile-layout-raceBoxH-h, 0px)) !important;
       }
 
-      .card.monster-framed .war-chip {
+      .card.monster-framed .frame-chip.war-chip {
         transform: translate(var(--mobile-layout-war-x, var(--layout-war-x)), var(--mobile-layout-war-y, var(--layout-war-y))) !important;
         font-size: var(--mobile-layout-war-size, var(--layout-war-size)) !important;
         min-width: calc(24px + var(--mobile-layout-warBoxW-w, 0px)) !important;
@@ -6251,8 +6256,9 @@
       .card.spell-framed .spell-frame-cost {
         transform: translate(var(--mobile-layout-spellCost-x, var(--spell-layout-cost-x)), var(--mobile-layout-spellCost-y, var(--spell-layout-cost-y))) !important;
         font-size: var(--mobile-layout-spellCost-size, var(--spell-layout-cost-size)) !important;
-        min-width: calc(21px + var(--mobile-layout-spellCostBoxW-w, 0px)) !important;
-        height: calc(21px + var(--mobile-layout-spellCostBoxH-h, 0px)) !important;
+        width: max(12px, calc(21px + var(--mobile-layout-spellCostBoxW-w, 0px))) !important;
+        min-width: 0 !important;
+        height: max(12px, calc(21px + var(--mobile-layout-spellCostBoxH-h, 0px))) !important;
       }
 
       .card.spell-framed .spell-frame-art {
@@ -8292,15 +8298,15 @@
 };
 
     const DEFAULT_MOBILE_CARD_LAYOUT_FIELDS = {
-      "name": { "x": 8, "y": 1, "size": 11.5 },
+      "name": { "x": 8, "y": 2, "size": 11 },
       "cost": { "x": 0, "y": 0, "size": 15 },
-      "costBoxW": { "x": 0, "y": 0, "size": -34.5 },
+      "costBoxW": { "x": 0, "y": 0, "size": 0 },
       "costBoxH": { "x": 0, "y": 0, "size": 0 },
       "art": { "x": 1, "y": -7, "size": 46 },
-      "race": { "x": 4, "y": 18, "size": 10 },
+      "race": { "x": 4, "y": 18, "size": 13.5 },
       "raceBoxW": { "x": -7, "y": -8, "size": -4.5 },
       "raceBoxH": { "x": 0, "y": 0, "size": 0 },
-      "war": { "x": 15, "y": 1, "size": 1.5 },
+      "war": { "x": 15, "y": 13, "size": 1.5 },
       "warBoxW": { "x": 0, "y": 0, "size": 0 },
       "warBoxH": { "x": 0, "y": 0, "size": 0 },
       "abilities": { "x": 0, "y": -21, "size": 6 },
@@ -8320,20 +8326,20 @@
       "speedBoxH": { "x": 0, "y": 0, "size": 0 },
       "artBoxW": { "x": 0, "y": 0, "size": 12 },
       "artBoxH": { "x": 0, "y": 0, "size": 2.5 },
-      "spellName": { "x": 5, "y": 6, "size": 13.5 },
+      "spellName": { "x": 5, "y": 2, "size": 11 },
       "spellCost": { "x": 0, "y": 0, "size": 16 },
       "spellCostBoxW": { "x": 0, "y": 0, "size": 0 },
       "spellCostBoxH": { "x": 0, "y": 0, "size": 0 },
-      "spellArt": { "x": 0, "y": -6, "size": 45 },
-      "spellTarget": { "x": 1, "y": 30, "size": 9 },
-      "spellDesc": { "x": 0, "y": 10, "size": 12 },
+      "spellArt": { "x": 0, "y": -9, "size": 40 },
+      "spellTarget": { "x": 1, "y": 0, "size": 7 },
+      "spellDesc": { "x": 0, "y": -8, "size": 8 },
       "spellDescBoxW": { "x": 0, "y": 0, "size": 0 },
       "spellDescBoxH": { "x": 0, "y": 0, "size": 18 },
       "spellArtBoxW": { "x": 0, "y": 0, "size": 15.5 },
-      "spellArtBoxH": { "x": 0, "y": 0, "size": 51 }
+      "spellArtBoxH": { "x": 0, "y": 0, "size": 22 }
     };
 
-    const CARD_LAYOUT_STORAGE_KEY = "heavenly_gardens_card_layout_editor_v10_mobile_defaults";
+    const CARD_LAYOUT_STORAGE_KEY = "heavenly_gardens_card_layout_editor_v11_mobile_defaults";
     let cardLayoutConfig = JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT_CONFIG));
     let selectedLayoutTarget = "name";
     let layoutEditMode = false;
