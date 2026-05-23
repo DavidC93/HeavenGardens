@@ -5579,9 +5579,11 @@
     @media (max-width: 720px) {
       :root {
         --mobile-header-h: 46px;
-        --mobile-bottom-h: calc(62px + env(safe-area-inset-bottom, 0px));
+        --mobile-bottom-h: calc(72px + env(safe-area-inset-bottom, 0px));
         --mobile-hud-h: 40px;
-        --mobile-hand-h: clamp(166px, 28dvh, 214px);
+        --mobile-card-w: clamp(108px, 29.5vw, 122px);
+        --mobile-card-h: calc(var(--mobile-card-w) * 1.40625);
+        --mobile-hand-h: calc(var(--mobile-card-h) + 18px);
         --mobile-gap: 6px;
       }
 
@@ -5856,12 +5858,12 @@
 
       .arena .slot .card.monster-framed,
       .arena .slot .card.spell-framed {
-        width: min(30vw, 118px) !important;
-        height: min(42vw, 166px) !important;
-        min-width: min(30vw, 118px) !important;
-        min-height: min(42vw, 166px) !important;
-        max-width: 118px !important;
-        max-height: 166px !important;
+        width: var(--mobile-card-w) !important;
+        height: var(--mobile-card-h) !important;
+        min-width: var(--mobile-card-w) !important;
+        min-height: var(--mobile-card-h) !important;
+        max-width: var(--mobile-card-w) !important;
+        max-height: var(--mobile-card-h) !important;
         transform: none !important;
         margin: 0 auto !important;
         align-self: center !important;
@@ -5897,13 +5899,13 @@
       .hand .card.spell-framed,
       body.fullscreen-mode .hand .card.monster-framed,
       body.fullscreen-mode .hand .card.spell-framed {
-        width: 128px !important;
-        height: 180px !important;
-        min-width: 128px !important;
-        min-height: 180px !important;
-        max-width: 128px !important;
-        max-height: 180px !important;
-        flex: 0 0 128px !important;
+        width: var(--mobile-card-w) !important;
+        height: var(--mobile-card-h) !important;
+        min-width: var(--mobile-card-w) !important;
+        min-height: var(--mobile-card-h) !important;
+        max-width: var(--mobile-card-w) !important;
+        max-height: var(--mobile-card-h) !important;
+        flex: 0 0 var(--mobile-card-w) !important;
         transform: none !important;
         margin: 0 !important;
         scroll-snap-align: center;
@@ -5917,9 +5919,11 @@
       .mobile-battle-bar {
         display: grid !important;
         position: fixed !important;
-        inset: auto 0 0 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
         height: var(--mobile-bottom-h) !important;
-        padding: 7px 10px calc(7px + env(safe-area-inset-bottom, 0px)) !important;
+        padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
         z-index: 95 !important;
         background: linear-gradient(180deg, rgba(8,9,15,0), rgba(8,9,15,.95) 24%) !important;
         border-top: 1px solid rgba(255,255,255,.10) !important;
@@ -6013,32 +6017,162 @@
         padding: 16px !important;
         border-radius: 18px !important;
       }
+
+      .layout-editor-panel.open {
+        left: 8px !important;
+        right: 8px !important;
+        bottom: calc(var(--mobile-bottom-h) + 8px) !important;
+        top: auto !important;
+        width: auto !important;
+        max-height: min(54dvh, 410px) !important;
+        overflow: auto !important;
+        padding: 10px !important;
+        border-radius: 16px !important;
+        z-index: 160 !important;
+      }
+
+      .layout-editor-panel h3 {
+        font-size: 14px !important;
+        margin-bottom: 6px !important;
+      }
+
+      .layout-editor-panel .hint {
+        display: none !important;
+      }
+
+      .layout-editor-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+      }
+
+      .layout-editor-panel label {
+        font-size: 11px !important;
+        gap: 4px !important;
+      }
+
+      .layout-editor-panel input,
+      .layout-editor-panel select {
+        min-height: 34px !important;
+        padding: 7px !important;
+        font-size: 13px !important;
+      }
+
+      .layout-editor-actions {
+        gap: 6px !important;
+      }
+
+      .layout-editor-actions button {
+        min-height: 34px !important;
+        padding: 7px 8px !important;
+        font-size: 11px !important;
+      }
+
+      .layout-editor-panel textarea {
+        height: 72px !important;
+        min-height: 72px !important;
+        font-size: 11px !important;
+      }
+
+      .card.monster-framed .frame-name {
+        transform: translate(var(--mobile-layout-name-x, var(--layout-name-x)), var(--mobile-layout-name-y, var(--layout-name-y))) !important;
+        font-size: var(--mobile-layout-name-size, var(--layout-name-size)) !important;
+      }
+
+      .card.monster-framed .frame-cost {
+        transform: translate(var(--mobile-layout-cost-x, var(--layout-cost-x)), var(--mobile-layout-cost-y, var(--layout-cost-y))) !important;
+        font-size: var(--mobile-layout-cost-size, var(--layout-cost-size)) !important;
+      }
+
+      .card.monster-framed .frame-art {
+        left: calc(13px - (var(--mobile-layout-art-box-w, var(--layout-art-box-w)) / 2)) !important;
+        right: calc(13px - (var(--mobile-layout-art-box-w, var(--layout-art-box-w)) / 2)) !important;
+        height: calc(78px + var(--mobile-layout-art-box-h, var(--layout-art-box-h))) !important;
+        transform: translate(var(--mobile-layout-art-x, var(--layout-art-x)), var(--mobile-layout-art-y, var(--layout-art-y))) !important;
+        font-size: var(--mobile-layout-art-size, var(--layout-art-size)) !important;
+      }
+
+      .card.monster-framed .race-chip {
+        transform: translate(var(--mobile-layout-race-x, var(--layout-race-x)), var(--mobile-layout-race-y, var(--layout-race-y))) !important;
+        font-size: var(--mobile-layout-race-size, var(--layout-race-size)) !important;
+      }
+
+      .card.monster-framed .war-chip {
+        transform: translate(var(--mobile-layout-war-x, var(--layout-war-x)), var(--mobile-layout-war-y, var(--layout-war-y))) !important;
+        font-size: var(--mobile-layout-war-size, var(--layout-war-size)) !important;
+      }
+
+      .card.monster-framed .frame-abilities {
+        transform: translate(var(--mobile-layout-abilities-x, var(--layout-abilities-x)), var(--mobile-layout-abilities-y, var(--layout-abilities-y))) !important;
+        font-size: var(--mobile-layout-abilities-size, var(--layout-abilities-size)) !important;
+      }
+
+      .card.monster-framed .frame-ability {
+        font-size: var(--mobile-layout-abilities-size, var(--layout-abilities-size)) !important;
+      }
+
+      .card.monster-framed .frame-stat.attack {
+        transform: translate(var(--mobile-layout-attack-x, var(--layout-attack-x)), var(--mobile-layout-attack-y, var(--layout-attack-y))) !important;
+        font-size: var(--mobile-layout-attack-size, var(--layout-attack-size)) !important;
+      }
+
+      .card.monster-framed .frame-stat.defense {
+        transform: translate(var(--mobile-layout-defense-x, var(--layout-defense-x)), var(--mobile-layout-defense-y, var(--layout-defense-y))) !important;
+        font-size: var(--mobile-layout-defense-size, var(--layout-defense-size)) !important;
+      }
+
+      .card.monster-framed .frame-stat.hp {
+        transform: translate(var(--mobile-layout-hp-x, var(--layout-hp-x)), var(--mobile-layout-hp-y, var(--layout-hp-y))) !important;
+        font-size: var(--mobile-layout-hp-size, var(--layout-hp-size)) !important;
+      }
+
+      .card.monster-framed .frame-stat.speed {
+        transform: translate(var(--mobile-layout-speed-x, var(--layout-speed-x)), var(--mobile-layout-speed-y, var(--layout-speed-y))) !important;
+        font-size: var(--mobile-layout-speed-size, var(--layout-speed-size)) !important;
+      }
+
+      .card.spell-framed .spell-frame-name {
+        transform: translate(var(--mobile-layout-spellName-x, var(--spell-layout-name-x)), var(--mobile-layout-spellName-y, var(--spell-layout-name-y))) !important;
+        font-size: var(--mobile-layout-spellName-size, var(--spell-layout-name-size)) !important;
+      }
+
+      .card.spell-framed .spell-frame-cost {
+        transform: translate(var(--mobile-layout-spellCost-x, var(--spell-layout-cost-x)), var(--mobile-layout-spellCost-y, var(--spell-layout-cost-y))) !important;
+        font-size: var(--mobile-layout-spellCost-size, var(--spell-layout-cost-size)) !important;
+      }
+
+      .card.spell-framed .spell-frame-art {
+        left: calc(14px - (var(--mobile-layout-spellArtBoxW, var(--spell-layout-art-box-w)) / 2)) !important;
+        right: calc(14px - (var(--mobile-layout-spellArtBoxW, var(--spell-layout-art-box-w)) / 2)) !important;
+        height: calc(65px + var(--mobile-layout-spellArtBoxH, var(--spell-layout-art-box-h))) !important;
+        transform: translate(var(--mobile-layout-spellArt-x, var(--spell-layout-art-x)), var(--mobile-layout-spellArt-y, var(--spell-layout-art-y))) !important;
+        font-size: var(--mobile-layout-spellArt-size, var(--spell-layout-art-size)) !important;
+      }
+
+      .card.spell-framed .spell-frame-target {
+        transform: translate(var(--mobile-layout-spellTarget-x, var(--spell-layout-target-x)), var(--mobile-layout-spellTarget-y, var(--spell-layout-target-y))) !important;
+        font-size: var(--mobile-layout-spellTarget-size, var(--spell-layout-target-size)) !important;
+      }
+
+      .card.spell-framed .spell-frame-desc {
+        left: calc(15px - (var(--mobile-layout-spellDescBoxW, var(--spell-layout-desc-box-w)) / 2)) !important;
+        right: calc(15px - (var(--mobile-layout-spellDescBoxW, var(--spell-layout-desc-box-w)) / 2)) !important;
+        bottom: calc(18px - var(--mobile-layout-spellDescBoxH, var(--spell-layout-desc-box-h))) !important;
+        transform: translate(var(--mobile-layout-spellDesc-x, var(--spell-layout-desc-x)), var(--mobile-layout-spellDesc-y, var(--spell-layout-desc-y))) !important;
+        font-size: var(--mobile-layout-spellDesc-size, var(--spell-layout-desc-size)) !important;
+      }
     }
 
     @media (max-width: 390px) {
       :root {
         --mobile-header-h: 42px;
         --mobile-hud-h: 36px;
-        --mobile-hand-h: clamp(154px, 27dvh, 190px);
+        --mobile-card-w: clamp(102px, 29vw, 114px);
+        --mobile-hand-h: calc(var(--mobile-card-h) + 16px);
       }
 
-      .arena .slot .card.monster-framed,
-      .arena .slot .card.spell-framed {
-        width: min(29vw, 108px) !important;
-        height: min(40.8vw, 152px) !important;
-        min-width: min(29vw, 108px) !important;
-        min-height: min(40.8vw, 152px) !important;
-      }
-
-      .hand .card.monster-framed,
-      .hand .card.spell-framed,
-      body.fullscreen-mode .hand .card.monster-framed,
-      body.fullscreen-mode .hand .card.spell-framed {
-        width: 116px !important;
-        height: 163px !important;
-        min-width: 116px !important;
-        min-height: 163px !important;
-        flex-basis: 116px !important;
+      .mobile-battle-bar button {
+        min-height: 44px !important;
+        font-size: 13px !important;
       }
 
       .board-stat-line {
@@ -7918,6 +8052,28 @@
     let selectedLayoutTarget = "name";
     let layoutEditMode = false;
 
+    function defaultMobileCardLayoutFields() {
+      return JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT_CONFIG.fields));
+    }
+
+    function ensureMobileCardLayoutFields() {
+      if (!cardLayoutConfig.mobileFields) cardLayoutConfig.mobileFields = defaultMobileCardLayoutFields();
+      Object.keys(DEFAULT_CARD_LAYOUT_CONFIG.fields).forEach(key => {
+        if (!cardLayoutConfig.mobileFields[key]) {
+          cardLayoutConfig.mobileFields[key] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[key] };
+        }
+      });
+      return cardLayoutConfig.mobileFields;
+    }
+
+    function isMobileLayoutEditorActive() {
+      return window.matchMedia?.("(max-width: 720px)")?.matches;
+    }
+
+    function activeLayoutFields() {
+      return isMobileLayoutEditorActive() ? ensureMobileCardLayoutFields() : cardLayoutConfig.fields;
+    }
+
     function loadCardLayoutConfig() {
       try {
         const saved = localStorage.getItem(CARD_LAYOUT_STORAGE_KEY);
@@ -7929,6 +8085,14 @@
             cardLayoutConfig.fields[key] = { ...cardLayoutConfig.fields[key], ...parsed.fields[key] };
           }
         });
+        if (parsed.mobileFields) {
+          ensureMobileCardLayoutFields();
+          Object.keys(DEFAULT_CARD_LAYOUT_CONFIG.fields).forEach(key => {
+            if (parsed.mobileFields[key]) {
+              cardLayoutConfig.mobileFields[key] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[key], ...parsed.mobileFields[key] };
+            }
+          });
+        }
       } catch {}
     }
 
@@ -7976,6 +8140,19 @@
         if (key === "spellArtBoxW") root.style.setProperty("--spell-layout-art-box-w", `${Number(value.size || 0)}px`);
         if (key === "spellArtBoxH") root.style.setProperty("--spell-layout-art-box-h", `${Number(value.size || 0)}px`);
       });
+      const mobileFields = ensureMobileCardLayoutFields();
+      Object.entries(mobileFields).forEach(([key, value]) => {
+        root.style.setProperty(`--mobile-layout-${key}-x`, `${Number(value.x || 0)}px`);
+        root.style.setProperty(`--mobile-layout-${key}-y`, `${Number(value.y || 0)}px`);
+        root.style.setProperty(`--mobile-layout-${key}-size`, `${Number(value.size || 0)}px`);
+
+        if (key === "artBoxW") root.style.setProperty("--mobile-layout-art-box-w", `${Number(value.size || 0)}px`);
+        if (key === "artBoxH") root.style.setProperty("--mobile-layout-art-box-h", `${Number(value.size || 0)}px`);
+        if (key === "spellDescBoxW") root.style.setProperty("--mobile-layout-spellDescBoxW", `${Number(value.size || 0)}px`);
+        if (key === "spellDescBoxH") root.style.setProperty("--mobile-layout-spellDescBoxH", `${Number(value.size || 0)}px`);
+        if (key === "spellArtBoxW") root.style.setProperty("--mobile-layout-spellArtBoxW", `${Number(value.size || 0)}px`);
+        if (key === "spellArtBoxH") root.style.setProperty("--mobile-layout-spellArtBoxH", `${Number(value.size || 0)}px`);
+      });
       updateLayoutEditorInputs();
       updateLayoutTargetSelection();
       updateLayoutJsonOutput();
@@ -7991,7 +8168,7 @@
     }
 
     function updateLayoutEditorInputs() {
-      const field = cardLayoutConfig.fields[selectedLayoutTarget];
+      const field = activeLayoutFields()[selectedLayoutTarget];
       if (!field) return;
       const x = document.getElementById("layoutXInput");
       const y = document.getElementById("layoutYInput");
@@ -8018,7 +8195,7 @@
     }
 
     function readLayoutInputs() {
-      const field = cardLayoutConfig.fields[selectedLayoutTarget];
+      const field = activeLayoutFields()[selectedLayoutTarget];
       if (!field) return;
       field.x = Number(document.getElementById("layoutXInput").value || 0);
       field.y = Number(document.getElementById("layoutYInput").value || 0);
@@ -8029,7 +8206,7 @@
     }
 
     function resetLayoutTarget() {
-      cardLayoutConfig.fields[selectedLayoutTarget] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[selectedLayoutTarget] };
+      activeLayoutFields()[selectedLayoutTarget] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[selectedLayoutTarget] };
       cardLayoutConfig.updatedAt = new Date().toISOString();
       saveCardLayoutConfig();
       applyCardLayoutConfig();
@@ -8037,7 +8214,11 @@
 
     function resetAllLayout() {
       if (!confirm("לאפס את כל מיקומי הפריסה?")) return;
-      cardLayoutConfig = JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT_CONFIG));
+      if (isMobileLayoutEditorActive()) {
+        cardLayoutConfig.mobileFields = defaultMobileCardLayoutFields();
+      } else {
+        cardLayoutConfig = JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT_CONFIG));
+      }
       cardLayoutConfig.updatedAt = new Date().toISOString();
       saveCardLayoutConfig();
       applyCardLayoutConfig();
@@ -8086,6 +8267,14 @@
             cardLayoutConfig.fields[key] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[key], ...parsed.fields[key] };
           }
         });
+        if (parsed.mobileFields) {
+          ensureMobileCardLayoutFields();
+          Object.keys(DEFAULT_CARD_LAYOUT_CONFIG.fields).forEach(key => {
+            if (parsed.mobileFields[key]) {
+              cardLayoutConfig.mobileFields[key] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[key], ...parsed.mobileFields[key] };
+            }
+          });
+        }
         cardLayoutConfig.updatedAt = new Date().toISOString();
         saveCardLayoutConfig();
         applyCardLayoutConfig();

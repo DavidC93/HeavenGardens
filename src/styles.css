@@ -12,7 +12,7 @@
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background:
     radial-gradient(circle at 14% 10%, rgba(239, 71, 111, 0.2), transparent 28%),
@@ -31,7 +31,7 @@ textarea {
 .game-stage,
 .game-frame {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
 }
 
 .shell {
