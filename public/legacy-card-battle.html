@@ -2669,11 +2669,11 @@
 
     @media (max-width: 720px) {
       .layout-editor-panel {
-        top: 72px;
+        top: calc(var(--mobile-header-h, 56px) + var(--mobile-hud-h, 52px) + 8px);
         left: 8px;
         right: 8px;
         width: auto;
-        max-height: calc(100vh - 88px);
+        max-height: min(46dvh, 370px);
       }
 
       .layout-editor-grid {
@@ -3761,7 +3761,12 @@
       z-index: 1000;
       display: grid;
       place-items: center;
+      align-items: center;
+      justify-items: center;
+      min-height: 100vh;
+      min-height: 100dvh;
       padding: 24px;
+      overflow: auto;
       background:
         radial-gradient(circle at 50% 20%, rgba(245, 203, 111, .18), transparent 24%),
         radial-gradient(circle at 18% 78%, rgba(101, 55, 20, .25), transparent 28%),
@@ -3798,6 +3803,7 @@
       position: relative;
       z-index: 1;
       width: min(540px, 94vw);
+      margin: auto;
       min-height: 420px;
       display: grid;
       justify-items: center;
@@ -3934,9 +3940,18 @@
     }
 
     @media (max-width: 720px) {
+      .start-overlay {
+        padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        place-items: center;
+      }
+
       .start-card {
-        min-height: 380px;
+        width: min(420px, 92vw);
+        min-height: auto;
+        max-height: calc(100dvh - 24px);
+        overflow: auto;
         padding: 28px 22px;
+        border-radius: 22px;
       }
 
       .start-emblem {
@@ -6088,14 +6103,22 @@
       .layout-editor-panel.open {
         left: 8px !important;
         right: 8px !important;
-        bottom: calc(var(--mobile-bottom-h) + 8px) !important;
-        top: auto !important;
+        top: calc(var(--mobile-header-h, 56px) + var(--mobile-hud-h, 52px) + 8px) !important;
+        bottom: auto !important;
         width: auto !important;
-        max-height: min(54dvh, 410px) !important;
+        max-height: min(46dvh, 370px) !important;
         overflow: auto !important;
         padding: 10px !important;
         border-radius: 16px !important;
         z-index: 160 !important;
+      }
+
+      .layout-editor-panel.open.dragging {
+        left: var(--layout-editor-drag-x, 8px) !important;
+        right: auto !important;
+        top: var(--layout-editor-drag-y, 116px) !important;
+        bottom: auto !important;
+        width: min(374px, calc(100vw - 16px)) !important;
       }
 
       .layout-editor-panel h3 {
@@ -6138,6 +6161,12 @@
         height: 72px !important;
         min-height: 72px !important;
         font-size: 11px !important;
+      }
+
+      body.layout-edit-mode .card.monster-framed .frame-kind-row,
+      body.layout-edit-mode .card.monster-framed .frame-chip {
+        pointer-events: auto !important;
+        z-index: 45 !important;
       }
 
       .card.monster-framed .frame-name {
@@ -8262,20 +8291,62 @@
       }
 };
 
-    const CARD_LAYOUT_STORAGE_KEY = "heavenly_gardens_card_layout_editor_v9_spell_art_final_defaults";
+    const DEFAULT_MOBILE_CARD_LAYOUT_FIELDS = {
+      "name": { "x": 8, "y": 1, "size": 11.5 },
+      "cost": { "x": 0, "y": 0, "size": 15 },
+      "costBoxW": { "x": 0, "y": 0, "size": -34.5 },
+      "costBoxH": { "x": 0, "y": 0, "size": 0 },
+      "art": { "x": 1, "y": -7, "size": 46 },
+      "race": { "x": 4, "y": 18, "size": 10 },
+      "raceBoxW": { "x": -7, "y": -8, "size": -4.5 },
+      "raceBoxH": { "x": 0, "y": 0, "size": 0 },
+      "war": { "x": 15, "y": 1, "size": 1.5 },
+      "warBoxW": { "x": 0, "y": 0, "size": 0 },
+      "warBoxH": { "x": 0, "y": 0, "size": 0 },
+      "abilities": { "x": 0, "y": -21, "size": 6 },
+      "abilitiesBoxW": { "x": 0, "y": 0, "size": 8 },
+      "abilitiesBoxH": { "x": 0, "y": 0, "size": -1 },
+      "attack": { "x": -6, "y": 5, "size": 9 },
+      "attackBoxW": { "x": 0, "y": 0, "size": 0 },
+      "attackBoxH": { "x": 0, "y": 0, "size": 0 },
+      "defense": { "x": -23, "y": 5, "size": 9 },
+      "defenseBoxW": { "x": 0, "y": 0, "size": 0 },
+      "defenseBoxH": { "x": 0, "y": 0, "size": 0 },
+      "hp": { "x": 28, "y": 5, "size": 9 },
+      "hpBoxW": { "x": 0, "y": 0, "size": 0 },
+      "hpBoxH": { "x": 0, "y": 0, "size": 0 },
+      "speed": { "x": 12, "y": 5, "size": 9 },
+      "speedBoxW": { "x": 0, "y": 0, "size": 0 },
+      "speedBoxH": { "x": 0, "y": 0, "size": 0 },
+      "artBoxW": { "x": 0, "y": 0, "size": 12 },
+      "artBoxH": { "x": 0, "y": 0, "size": 2.5 },
+      "spellName": { "x": 5, "y": 6, "size": 13.5 },
+      "spellCost": { "x": 0, "y": 0, "size": 16 },
+      "spellCostBoxW": { "x": 0, "y": 0, "size": 0 },
+      "spellCostBoxH": { "x": 0, "y": 0, "size": 0 },
+      "spellArt": { "x": 0, "y": -6, "size": 45 },
+      "spellTarget": { "x": 1, "y": 30, "size": 9 },
+      "spellDesc": { "x": 0, "y": 10, "size": 12 },
+      "spellDescBoxW": { "x": 0, "y": 0, "size": 0 },
+      "spellDescBoxH": { "x": 0, "y": 0, "size": 18 },
+      "spellArtBoxW": { "x": 0, "y": 0, "size": 15.5 },
+      "spellArtBoxH": { "x": 0, "y": 0, "size": 51 }
+    };
+
+    const CARD_LAYOUT_STORAGE_KEY = "heavenly_gardens_card_layout_editor_v10_mobile_defaults";
     let cardLayoutConfig = JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT_CONFIG));
     let selectedLayoutTarget = "name";
     let layoutEditMode = false;
 
     function defaultMobileCardLayoutFields() {
-      return JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT_CONFIG.fields));
+      return JSON.parse(JSON.stringify(DEFAULT_MOBILE_CARD_LAYOUT_FIELDS));
     }
 
     function ensureMobileCardLayoutFields() {
       if (!cardLayoutConfig.mobileFields) cardLayoutConfig.mobileFields = defaultMobileCardLayoutFields();
       Object.keys(DEFAULT_CARD_LAYOUT_CONFIG.fields).forEach(key => {
         if (!cardLayoutConfig.mobileFields[key]) {
-          cardLayoutConfig.mobileFields[key] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[key] };
+          cardLayoutConfig.mobileFields[key] = { ...(DEFAULT_MOBILE_CARD_LAYOUT_FIELDS[key] || DEFAULT_CARD_LAYOUT_CONFIG.fields[key]) };
         }
       });
       return cardLayoutConfig.mobileFields;
@@ -8304,7 +8375,7 @@
           ensureMobileCardLayoutFields();
           Object.keys(DEFAULT_CARD_LAYOUT_CONFIG.fields).forEach(key => {
             if (parsed.mobileFields[key]) {
-              cardLayoutConfig.mobileFields[key] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[key], ...parsed.mobileFields[key] };
+              cardLayoutConfig.mobileFields[key] = { ...(DEFAULT_MOBILE_CARD_LAYOUT_FIELDS[key] || DEFAULT_CARD_LAYOUT_CONFIG.fields[key]), ...parsed.mobileFields[key] };
             }
           });
         }
@@ -8401,7 +8472,7 @@
     }
 
     function updateLayoutTargetSelection() {
-      document.querySelectorAll(".layout-edit-target").forEach(el => {
+      document.querySelectorAll(".layout-edit-target, .spell-layout-edit-target").forEach(el => {
         el.classList.toggle("selected-layout-target", el.dataset.layoutTarget === selectedLayoutTarget);
       });
     }
@@ -8435,7 +8506,8 @@
     }
 
     function resetLayoutTarget() {
-      activeLayoutFields()[selectedLayoutTarget] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[selectedLayoutTarget] };
+      const defaults = isMobileLayoutEditorActive() ? DEFAULT_MOBILE_CARD_LAYOUT_FIELDS : DEFAULT_CARD_LAYOUT_CONFIG.fields;
+      activeLayoutFields()[selectedLayoutTarget] = { ...(defaults[selectedLayoutTarget] || DEFAULT_CARD_LAYOUT_CONFIG.fields[selectedLayoutTarget]) };
       cardLayoutConfig.updatedAt = new Date().toISOString();
       saveCardLayoutConfig();
       applyCardLayoutConfig();
@@ -8500,7 +8572,7 @@
           ensureMobileCardLayoutFields();
           Object.keys(DEFAULT_CARD_LAYOUT_CONFIG.fields).forEach(key => {
             if (parsed.mobileFields[key]) {
-              cardLayoutConfig.mobileFields[key] = { ...DEFAULT_CARD_LAYOUT_CONFIG.fields[key], ...parsed.mobileFields[key] };
+              cardLayoutConfig.mobileFields[key] = { ...(DEFAULT_MOBILE_CARD_LAYOUT_FIELDS[key] || DEFAULT_CARD_LAYOUT_CONFIG.fields[key]), ...parsed.mobileFields[key] };
             }
           });
         }
@@ -8547,8 +8619,12 @@
       let drag = null;
       handle.addEventListener("pointerdown", ev => {
         if (ev.target.closest("button")) return;
+        ev.preventDefault();
         const rect = panel.getBoundingClientRect();
-        drag = { dx: ev.clientX - rect.left, dy: ev.clientY - rect.top };
+        drag = { dx: ev.clientX - rect.left, dy: ev.clientY - rect.top, pointerId: ev.pointerId };
+        panel.classList.add("dragging");
+        panel.style.setProperty("--layout-editor-drag-x", `${rect.left}px`);
+        panel.style.setProperty("--layout-editor-drag-y", `${rect.top}px`);
         panel.style.left = `${rect.left}px`;
         panel.style.top = `${rect.top}px`;
         panel.style.right = "auto";
@@ -8557,21 +8633,29 @@
         handle.setPointerCapture?.(ev.pointerId);
       });
 
-      handle.addEventListener("pointermove", ev => {
+      const move = ev => {
         if (!drag) return;
         const maxX = Math.max(0, window.innerWidth - panel.offsetWidth);
         const maxY = Math.max(0, window.innerHeight - panel.offsetHeight);
-        panel.style.left = `${Math.max(0, Math.min(maxX, ev.clientX - drag.dx))}px`;
-        panel.style.top = `${Math.max(0, Math.min(maxY, ev.clientY - drag.dy))}px`;
-      });
+        const nextX = Math.max(0, Math.min(maxX, ev.clientX - drag.dx));
+        const nextY = Math.max(0, Math.min(maxY, ev.clientY - drag.dy));
+        panel.style.setProperty("--layout-editor-drag-x", `${nextX}px`);
+        panel.style.setProperty("--layout-editor-drag-y", `${nextY}px`);
+        panel.style.left = `${nextX}px`;
+        panel.style.top = `${nextY}px`;
+      };
 
       const stop = ev => {
         if (!drag) return;
         drag = null;
         handle.releasePointerCapture?.(ev.pointerId);
       };
+      handle.addEventListener("pointermove", move);
+      document.addEventListener("pointermove", move);
       handle.addEventListener("pointerup", stop);
       handle.addEventListener("pointercancel", stop);
+      document.addEventListener("pointerup", stop);
+      document.addEventListener("pointercancel", stop);
     }
 
     function bindLayoutEditor() {
