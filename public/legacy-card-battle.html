@@ -2545,6 +2545,39 @@
       font-size: 18px;
     }
 
+    .layout-editor-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .layout-editor-head:active {
+      cursor: grabbing;
+    }
+
+    .layout-editor-head h3 {
+      margin: 0;
+    }
+
+    .layout-close-btn {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #ff6b6b;
+      color: #111;
+      font-size: 18px;
+      line-height: 1;
+    }
+
     .layout-editor-panel .hint {
       font-size: 12px;
       line-height: 1.35;
@@ -2557,6 +2590,27 @@
       grid-template-columns: 1fr 1fr 1fr;
       gap: 7px;
       margin: 8px 0;
+    }
+
+    .layout-stepper {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 34px;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .layout-step-btn {
+      min-width: 0;
+      height: 34px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: #ced4ff;
+      color: #10111a;
+      font-size: 18px;
+      box-shadow: 0 3px 0 rgba(0,0,0,.35);
+      touch-action: manipulation;
     }
 
     .layout-editor-panel label {
@@ -3658,6 +3712,19 @@
     body.layout-edit-mode .card.spell-framed .spell-layout-edit-target.selected-layout-target {
       outline: 3px solid #ffd166;
       outline-offset: 2px;
+      filter: brightness(1.12);
+    }
+
+    body.layout-edit-mode .card.monster-framed .layout-edit-target-box,
+    body.layout-edit-mode .card.spell-framed .spell-layout-edit-target-box {
+      outline: 1px dotted rgba(255,209,102,.9);
+      outline-offset: 2px;
+      cursor: crosshair;
+    }
+
+    body.layout-edit-mode .card.monster-framed .layout-edit-target-box.selected-layout-target,
+    body.layout-edit-mode .card.spell-framed .spell-layout-edit-target-box.selected-layout-target {
+      outline: 3px solid #06d6a0;
       filter: brightness(1.12);
     }
 
@@ -6081,6 +6148,8 @@
       .card.monster-framed .frame-cost {
         transform: translate(var(--mobile-layout-cost-x, var(--layout-cost-x)), var(--mobile-layout-cost-y, var(--layout-cost-y))) !important;
         font-size: var(--mobile-layout-cost-size, var(--layout-cost-size)) !important;
+        min-width: calc(21px + var(--mobile-layout-costBoxW-w, 0px)) !important;
+        height: calc(21px + var(--mobile-layout-costBoxH-h, 0px)) !important;
       }
 
       .card.monster-framed .frame-art {
@@ -6094,16 +6163,23 @@
       .card.monster-framed .race-chip {
         transform: translate(var(--mobile-layout-race-x, var(--layout-race-x)), var(--mobile-layout-race-y, var(--layout-race-y))) !important;
         font-size: var(--mobile-layout-race-size, var(--layout-race-size)) !important;
+        min-width: calc(24px + var(--mobile-layout-raceBoxW-w, 0px)) !important;
+        min-height: calc(12px + var(--mobile-layout-raceBoxH-h, 0px)) !important;
       }
 
       .card.monster-framed .war-chip {
         transform: translate(var(--mobile-layout-war-x, var(--layout-war-x)), var(--mobile-layout-war-y, var(--layout-war-y))) !important;
         font-size: var(--mobile-layout-war-size, var(--layout-war-size)) !important;
+        min-width: calc(24px + var(--mobile-layout-warBoxW-w, 0px)) !important;
+        min-height: calc(12px + var(--mobile-layout-warBoxH-h, 0px)) !important;
       }
 
       .card.monster-framed .frame-abilities {
         transform: translate(var(--mobile-layout-abilities-x, var(--layout-abilities-x)), var(--mobile-layout-abilities-y, var(--layout-abilities-y))) !important;
         font-size: var(--mobile-layout-abilities-size, var(--layout-abilities-size)) !important;
+        left: calc(14px - (var(--mobile-layout-abilitiesBoxW-w, 0px) / 2)) !important;
+        right: calc(14px - (var(--mobile-layout-abilitiesBoxW-w, 0px) / 2)) !important;
+        height: calc(27px + var(--mobile-layout-abilitiesBoxH-h, 0px)) !important;
       }
 
       .card.monster-framed .frame-ability {
@@ -6113,21 +6189,29 @@
       .card.monster-framed .frame-stat.attack {
         transform: translate(var(--mobile-layout-attack-x, var(--layout-attack-x)), var(--mobile-layout-attack-y, var(--layout-attack-y))) !important;
         font-size: var(--mobile-layout-attack-size, var(--layout-attack-size)) !important;
+        min-width: calc(22px + var(--mobile-layout-attackBoxW-w, 0px)) !important;
+        height: calc(23px + var(--mobile-layout-attackBoxH-h, 0px)) !important;
       }
 
       .card.monster-framed .frame-stat.defense {
         transform: translate(var(--mobile-layout-defense-x, var(--layout-defense-x)), var(--mobile-layout-defense-y, var(--layout-defense-y))) !important;
         font-size: var(--mobile-layout-defense-size, var(--layout-defense-size)) !important;
+        min-width: calc(22px + var(--mobile-layout-defenseBoxW-w, 0px)) !important;
+        height: calc(23px + var(--mobile-layout-defenseBoxH-h, 0px)) !important;
       }
 
       .card.monster-framed .frame-stat.hp {
         transform: translate(var(--mobile-layout-hp-x, var(--layout-hp-x)), var(--mobile-layout-hp-y, var(--layout-hp-y))) !important;
         font-size: var(--mobile-layout-hp-size, var(--layout-hp-size)) !important;
+        min-width: calc(22px + var(--mobile-layout-hpBoxW-w, 0px)) !important;
+        height: calc(23px + var(--mobile-layout-hpBoxH-h, 0px)) !important;
       }
 
       .card.monster-framed .frame-stat.speed {
         transform: translate(var(--mobile-layout-speed-x, var(--layout-speed-x)), var(--mobile-layout-speed-y, var(--layout-speed-y))) !important;
         font-size: var(--mobile-layout-speed-size, var(--layout-speed-size)) !important;
+        min-width: calc(22px + var(--mobile-layout-speedBoxW-w, 0px)) !important;
+        height: calc(23px + var(--mobile-layout-speedBoxH-h, 0px)) !important;
       }
 
       .card.spell-framed .spell-frame-name {
@@ -6138,6 +6222,8 @@
       .card.spell-framed .spell-frame-cost {
         transform: translate(var(--mobile-layout-spellCost-x, var(--spell-layout-cost-x)), var(--mobile-layout-spellCost-y, var(--spell-layout-cost-y))) !important;
         font-size: var(--mobile-layout-spellCost-size, var(--spell-layout-cost-size)) !important;
+        min-width: calc(21px + var(--mobile-layout-spellCostBoxW-w, 0px)) !important;
+        height: calc(21px + var(--mobile-layout-spellCostBoxH-h, 0px)) !important;
       }
 
       .card.spell-framed .spell-frame-art {
@@ -6511,7 +6597,10 @@
 
 
   <div id="layoutEditorPanel" class="layout-editor-panel" aria-label="עורך פריסת קלפים">
-    <h3>עריכת מיקומי קלף</h3>
+    <div id="layoutEditorDragHandle" class="layout-editor-head">
+      <h3>עריכת מיקומי קלף</h3>
+      <button id="layoutEditorCloseBtn" type="button" class="layout-close-btn" aria-label="סגור">×</button>
+    </div>
     <div class="hint">
       הפעל מצב עריכה, בחר שדה בקלף או מהרשימה, ושנה X/Y/גודל. הערכים הנוכחיים כבר מוגדרים כברירת מחדל. אפשר להמשיך לכוון ולייצא JSON חדש. גודל תמונה: 42 מציג תמונה מלאה. אם הגבול קטן מדי, ערוך גם רוחב/גובה אזור תמונה.
     </div>
@@ -6521,18 +6610,36 @@
       <select id="layoutTargetSelect">
         <option value="name">שם הקלף</option>
         <option value="cost">עלות אנ״ח</option>
+        <option value="costBoxW">רקע עלות — רוחב</option>
+        <option value="costBoxH">רקע עלות — גובה</option>
         <option value="art">זום תמונה / אייקון</option>
         <option value="artBoxW">רוחב אזור תמונה</option>
         <option value="artBoxH">גובה אזור תמונה</option>
         <option value="race">סוג יצור</option>
+        <option value="raceBoxW">רקע סוג יצור — רוחב</option>
+        <option value="raceBoxH">רקע סוג יצור — גובה</option>
         <option value="war">סוג לוחמה</option>
+        <option value="warBoxW">רקע לוחמה — רוחב</option>
+        <option value="warBoxH">רקע לוחמה — גובה</option>
         <option value="abilities">יכולות</option>
+        <option value="abilitiesBoxW">רקע יכולות — רוחב</option>
+        <option value="abilitiesBoxH">רקע יכולות — גובה</option>
         <option value="attack">התקפה</option>
+        <option value="attackBoxW">רקע התקפה — רוחב</option>
+        <option value="attackBoxH">רקע התקפה — גובה</option>
         <option value="defense">הגנה</option>
+        <option value="defenseBoxW">רקע הגנה — רוחב</option>
+        <option value="defenseBoxH">רקע הגנה — גובה</option>
         <option value="hp">חיים</option>
+        <option value="hpBoxW">רקע חיים — רוחב</option>
+        <option value="hpBoxH">רקע חיים — גובה</option>
         <option value="speed">מהירות</option>
+        <option value="speedBoxW">רקע מהירות — רוחב</option>
+        <option value="speedBoxH">רקע מהירות — גובה</option>
         <option value="spellName">קסם — שם הקלף</option>
         <option value="spellCost">קסם — עלות אנ״ח</option>
+        <option value="spellCostBoxW">קסם — רקע עלות רוחב</option>
+        <option value="spellCostBoxH">קסם — רקע עלות גובה</option>
         <option value="spellArt">קסם — זום תמונה / אייקון</option>
         <option value="spellArtBoxW">קסם — רוחב אזור תמונה</option>
         <option value="spellArtBoxH">קסם — גובה אזור תמונה</option>
@@ -6544,9 +6651,27 @@
     </label>
 
     <div class="layout-editor-grid">
-      <label>X<input id="layoutXInput" type="number" step="1"></label>
-      <label>Y<input id="layoutYInput" type="number" step="1"></label>
-      <label>גודל<input id="layoutSizeInput" type="number" step="0.5"></label>
+      <label>X
+        <div class="layout-stepper">
+          <button type="button" class="layout-step-btn" data-layout-field="x" data-layout-step="-1">−</button>
+          <input id="layoutXInput" type="number" step="1">
+          <button type="button" class="layout-step-btn" data-layout-field="x" data-layout-step="1">+</button>
+        </div>
+      </label>
+      <label>Y
+        <div class="layout-stepper">
+          <button type="button" class="layout-step-btn" data-layout-field="y" data-layout-step="-1">−</button>
+          <input id="layoutYInput" type="number" step="1">
+          <button type="button" class="layout-step-btn" data-layout-field="y" data-layout-step="1">+</button>
+        </div>
+      </label>
+      <label>גודל
+        <div class="layout-stepper">
+          <button type="button" class="layout-step-btn" data-layout-field="size" data-layout-step="-1">−</button>
+          <input id="layoutSizeInput" type="number" step="0.5">
+          <button type="button" class="layout-step-btn" data-layout-field="size" data-layout-step="1">+</button>
+        </div>
+      </label>
     </div>
 
     <div class="layout-editor-actions">
@@ -7949,6 +8074,16 @@
                   "y": 0,
                   "size": 16
             },
+            "costBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "costBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
             "art": {
                   "x": 1,
                   "y": -1,
@@ -7959,35 +8094,105 @@
                   "y": 6,
                   "size": 10
             },
+            "raceBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "raceBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
             "war": {
                   "x": 5,
                   "y": 9,
                   "size": 8.5
+            },
+            "warBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "warBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
             },
             "abilities": {
                   "x": 0,
                   "y": 0,
                   "size": 8
             },
+            "abilitiesBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "abilitiesBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
             "attack": {
                   "x": 2,
                   "y": 0,
                   "size": 12
+            },
+            "attackBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "attackBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
             },
             "defense": {
                   "x": -2,
                   "y": 0,
                   "size": 12
             },
+            "defenseBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "defenseBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
             "hp": {
                   "x": 11,
                   "y": 0,
                   "size": 12
             },
+            "hpBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "hpBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
             "speed": {
                   "x": 7,
                   "y": 0,
                   "size": 11
+            },
+            "speedBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "speedBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
             },
             "artBoxW": {
                   "x": 0,
@@ -8008,6 +8213,16 @@
                   "x": 0,
                   "y": 0,
                   "size": 16
+            },
+            "spellCostBoxW": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
+            },
+            "spellCostBoxH": {
+                  "x": 0,
+                  "y": 0,
+                  "size": 0
             },
             "spellArt": {
                   "x": 0,
@@ -8109,6 +8324,8 @@
 
         if (key === "artBoxW") root.style.setProperty("--layout-art-box-w", `${Number(value.size || 0)}px`);
         if (key === "artBoxH") root.style.setProperty("--layout-art-box-h", `${Number(value.size || 0)}px`);
+        if (key.endsWith("BoxW")) root.style.setProperty(`--layout-${key}-w`, `${Number(value.size || 0)}px`);
+        if (key.endsWith("BoxH")) root.style.setProperty(`--layout-${key}-h`, `${Number(value.size || 0)}px`);
 
         if (key === "spellName") {
           root.style.setProperty("--spell-layout-name-x", `${Number(value.x || 0)}px`);
@@ -8148,6 +8365,8 @@
 
         if (key === "artBoxW") root.style.setProperty("--mobile-layout-art-box-w", `${Number(value.size || 0)}px`);
         if (key === "artBoxH") root.style.setProperty("--mobile-layout-art-box-h", `${Number(value.size || 0)}px`);
+        if (key.endsWith("BoxW")) root.style.setProperty(`--mobile-layout-${key}-w`, `${Number(value.size || 0)}px`);
+        if (key.endsWith("BoxH")) root.style.setProperty(`--mobile-layout-${key}-h`, `${Number(value.size || 0)}px`);
         if (key === "spellDescBoxW") root.style.setProperty("--mobile-layout-spellDescBoxW", `${Number(value.size || 0)}px`);
         if (key === "spellDescBoxH") root.style.setProperty("--mobile-layout-spellDescBoxH", `${Number(value.size || 0)}px`);
         if (key === "spellArtBoxW") root.style.setProperty("--mobile-layout-spellArtBoxW", `${Number(value.size || 0)}px`);
@@ -8160,7 +8379,7 @@
 
 
     function updateArtBoxControlLabels() {
-      const isBox = selectedLayoutTarget === "artBoxW" || selectedLayoutTarget === "artBoxH" || selectedLayoutTarget === "spellDescBoxW" || selectedLayoutTarget === "spellDescBoxH" || selectedLayoutTarget === "spellArtBoxW" || selectedLayoutTarget === "spellArtBoxH";
+      const isBox = selectedLayoutTarget.endsWith("BoxW") || selectedLayoutTarget.endsWith("BoxH");
       const x = document.getElementById("layoutXInput");
       const y = document.getElementById("layoutYInput");
       if (x) x.disabled = isBox;
@@ -8192,6 +8411,16 @@
       selectedLayoutTarget = target;
       updateLayoutEditorInputs();
       updateLayoutTargetSelection();
+    }
+
+    function adjustLayoutValue(fieldName, delta) {
+      const field = activeLayoutFields()[selectedLayoutTarget];
+      if (!field || !(fieldName in field)) return;
+      const step = fieldName === "size" ? 0.5 : 1;
+      field[fieldName] = Number(((Number(field[fieldName] || 0) + delta * step)).toFixed(2));
+      cardLayoutConfig.updatedAt = new Date().toISOString();
+      saveCardLayoutConfig();
+      applyCardLayoutConfig();
     }
 
     function readLayoutInputs() {
@@ -8300,6 +8529,51 @@
       updateLayoutTargetSelection();
     }
 
+    function closeLayoutEditor() {
+      if (!layoutEditMode) return;
+      layoutEditMode = false;
+      document.body.classList.remove("layout-edit-mode");
+      document.getElementById("layoutEditorPanel")?.classList.remove("open");
+      const btn = document.getElementById("layoutEditToggle");
+      if (btn) btn.textContent = "🎛️ עריכת קלפים";
+    }
+
+    function bindLayoutEditorDrag() {
+      const panel = document.getElementById("layoutEditorPanel");
+      const handle = document.getElementById("layoutEditorDragHandle");
+      if (!panel || !handle || handle.dataset.dragBound === "true") return;
+      handle.dataset.dragBound = "true";
+
+      let drag = null;
+      handle.addEventListener("pointerdown", ev => {
+        if (ev.target.closest("button")) return;
+        const rect = panel.getBoundingClientRect();
+        drag = { dx: ev.clientX - rect.left, dy: ev.clientY - rect.top };
+        panel.style.left = `${rect.left}px`;
+        panel.style.top = `${rect.top}px`;
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+        panel.style.width = `${rect.width}px`;
+        handle.setPointerCapture?.(ev.pointerId);
+      });
+
+      handle.addEventListener("pointermove", ev => {
+        if (!drag) return;
+        const maxX = Math.max(0, window.innerWidth - panel.offsetWidth);
+        const maxY = Math.max(0, window.innerHeight - panel.offsetHeight);
+        panel.style.left = `${Math.max(0, Math.min(maxX, ev.clientX - drag.dx))}px`;
+        panel.style.top = `${Math.max(0, Math.min(maxY, ev.clientY - drag.dy))}px`;
+      });
+
+      const stop = ev => {
+        if (!drag) return;
+        drag = null;
+        handle.releasePointerCapture?.(ev.pointerId);
+      };
+      handle.addEventListener("pointerup", stop);
+      handle.addEventListener("pointercancel", stop);
+    }
+
     function bindLayoutEditor() {
       ensureLayoutEditorButton();
       loadCardLayoutConfig();
@@ -8319,6 +8593,7 @@
       const exportBtn = document.getElementById("layoutExportBtn");
       const copyBtn = document.getElementById("layoutCopyBtn");
       const importBtn = document.getElementById("layoutImportBtn");
+      const closeBtn = document.getElementById("layoutEditorCloseBtn");
 
       if (apply) apply.onclick = readLayoutInputs;
       if (resetTarget) resetTarget.onclick = resetLayoutTarget;
@@ -8326,14 +8601,24 @@
       if (exportBtn) exportBtn.onclick = exportCardLayoutJson;
       if (copyBtn) copyBtn.onclick = copyCardLayoutJson;
       if (importBtn) importBtn.onclick = importCardLayoutJson;
+      if (closeBtn) closeBtn.onclick = closeLayoutEditor;
+      bindLayoutEditorDrag();
+
+      document.querySelectorAll("[data-layout-step]").forEach(btn => {
+        btn.onclick = ev => {
+          ev.preventDefault();
+          adjustLayoutValue(btn.dataset.layoutField, Number(btn.dataset.layoutStep || 0));
+        };
+      });
 
       document.addEventListener("click", ev => {
         if (!layoutEditMode) return;
-        const target = ev.target.closest?.(".layout-edit-target, .spell-layout-edit-target");
+        const target = ev.target.closest?.(".layout-edit-target, .spell-layout-edit-target, .layout-edit-target-box, .spell-layout-edit-target-box");
         if (!target) return;
         ev.preventDefault();
         ev.stopPropagation();
-        setLayoutTarget(target.dataset.layoutTarget);
+        const boxTarget = target.dataset.layoutBoxTarget;
+        setLayoutTarget(ev.altKey && boxTarget ? boxTarget : target.dataset.layoutTarget);
       }, true);
     }
 
@@ -9391,8 +9676,8 @@
 
     function frameAttackStatHtml(card) {
       const info = effectiveAttackInfo(card);
-      if (!info.delta) return `<div class="frame-stat attack layout-edit-target" data-layout-target="attack" title="התקפה">${card.attack}</div>`;
-      return `<div class="frame-stat attack modified-stat layout-edit-target" data-layout-target="attack" title="התקפה מעודכנת לפי יתרון/חיסרון סוג"><strong>${info.attack}</strong><span class="stat-original">${card.attack}</span></div>`;
+      if (!info.delta) return `<div class="frame-stat attack layout-edit-target layout-edit-target-box" data-layout-target="attack" data-layout-box-target="attackBoxW" title="התקפה">${card.attack}</div>`;
+      return `<div class="frame-stat attack modified-stat layout-edit-target layout-edit-target-box" data-layout-target="attack" data-layout-box-target="attackBoxW" title="התקפה מעודכנת לפי יתרון/חיסרון סוג"><strong>${info.attack}</strong><span class="stat-original">${card.attack}</span></div>`;
     }
 
     function cardHtml(card, extraClass = "", badge = "") {
@@ -9404,11 +9689,11 @@
           <img class="card-frame-img" src="./assets/magic-card-frame.png" alt="">
           ${badge}
           <button class="frame-info-btn spell-frame-info" type="button" title="מידע על הקלף" onclick="showCardInfoByUid('${card.uid}'); event.stopPropagation();">i</button>
-          <div class="frame-cost spell-frame-cost spell-layout-edit-target" data-layout-target="spellCost">${card.cost}</div>
+          <div class="frame-cost spell-frame-cost spell-layout-edit-target spell-layout-edit-target-box" data-layout-target="spellCost" data-layout-box-target="spellCostBoxW" onclick="if(event.altKey){setLayoutTarget('spellCostBoxW'); event.stopPropagation();}">${card.cost}</div>
           <div class="frame-name spell-frame-name spell-layout-edit-target" data-layout-target="spellName">${card.name}</div>
-          <div class="frame-art spell-frame-art spell-layout-edit-target" data-layout-target="spellArt">${cardArtHtml(card)}</div>
+          <div class="frame-art spell-frame-art spell-layout-edit-target spell-layout-edit-target-box" data-layout-target="spellArt" data-layout-box-target="spellArtBoxW">${cardArtHtml(card)}</div>
           <div class="spell-frame-target spell-layout-edit-target" data-layout-target="spellTarget">🔮 קלף קסם · ${spellTargetLabel(card.target)}</div>
-          <div class="spell-frame-desc spell-layout-edit-target" data-layout-target="spellDesc" title="${card.desc || ""}"><span class="spell-desc-inner">${card.desc || "ללא תיאור"}</span></div>
+          <div class="spell-frame-desc spell-layout-edit-target spell-layout-edit-target-box" data-layout-target="spellDesc" data-layout-box-target="spellDescBoxW" title="${card.desc || ""}"><span class="spell-desc-inner">${card.desc || "ללא תיאור"}</span></div>
         </div>`;
       }
 
@@ -9418,17 +9703,17 @@
           ${badge}
           ${typeEffectNoteHtml(card)}
           ${card.poisoned ? `<div class="poison-mark">☠ מורעל</div>` : ""}
-          <div class="frame-cost layout-edit-target" data-layout-target="cost">${card.cost}</div>
+          <div class="frame-cost layout-edit-target layout-edit-target-box" data-layout-target="cost" data-layout-box-target="costBoxW">${card.cost}</div>
           <div class="frame-name layout-edit-target" data-layout-target="name">${card.name}</div>
-          <div class="frame-art layout-edit-target" data-layout-target="art">${cardArtHtml(card)}</div>
+          <div class="frame-art layout-edit-target layout-edit-target-box" data-layout-target="art" data-layout-box-target="artBoxW">${cardArtHtml(card)}</div>
           <div class="frame-kind-row">
-            <span class="frame-chip race-chip layout-edit-target" data-layout-target="race">${card.race}</span>
-            <span class="frame-chip war-chip layout-edit-target" data-layout-target="war">${card.war}</span>
+            <span class="frame-chip race-chip layout-edit-target layout-edit-target-box" data-layout-target="race" data-layout-box-target="raceBoxW">${card.race}</span>
+            <span class="frame-chip war-chip layout-edit-target layout-edit-target-box" data-layout-target="war" data-layout-box-target="warBoxW">${card.war}</span>
           </div>
-          <div class="frame-abilities layout-edit-target card-info-trigger" data-layout-target="abilities" title="לחץ לפתיחת מידע על הקלף" onclick="showCardInfoByUid(\'${card.uid}\'); event.stopPropagation();">${abilityBadgesFrameHtml(card)}</div>
-          <div class="frame-stat speed layout-edit-target" data-layout-target="speed" title="מהירות">${effectiveCombatSpeed(card)}</div>
-          <div class="frame-stat hp ${(String(card.currentHp).length) >= 2 ? "long-hp" : ""} layout-edit-target" data-layout-target="hp" title="חיים">${card.currentHp}</div>
-          <div class="frame-stat defense layout-edit-target" data-layout-target="defense" title="הגנה">${card.defense}</div>
+          <div class="frame-abilities layout-edit-target layout-edit-target-box card-info-trigger" data-layout-target="abilities" data-layout-box-target="abilitiesBoxW" title="לחץ לפתיחת מידע על הקלף" onclick="showCardInfoByUid(\'${card.uid}\'); event.stopPropagation();">${abilityBadgesFrameHtml(card)}</div>
+          <div class="frame-stat speed layout-edit-target layout-edit-target-box" data-layout-target="speed" data-layout-box-target="speedBoxW" title="מהירות">${effectiveCombatSpeed(card)}</div>
+          <div class="frame-stat hp ${(String(card.currentHp).length) >= 2 ? "long-hp" : ""} layout-edit-target layout-edit-target-box" data-layout-target="hp" data-layout-box-target="hpBoxW" title="חיים">${card.currentHp}</div>
+          <div class="frame-stat defense layout-edit-target layout-edit-target-box" data-layout-target="defense" data-layout-box-target="defenseBoxW" title="הגנה">${card.defense}</div>
           ${frameAttackStatHtml(card)}
         </div>`;
     }
