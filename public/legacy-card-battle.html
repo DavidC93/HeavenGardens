@@ -775,8 +775,8 @@
 
     .match-badge {
       position: absolute;
-      left: 7px;
-      top: 7px;
+      right: 16px;
+      top: 47px;
       z-index: 5;
       width: 30px;
       height: 30px;
@@ -789,6 +789,11 @@
       color: #111;
       box-shadow: 2px 3px 0 rgba(0,0,0,.32);
       direction: ltr;
+    }
+
+    .card.spell-framed .match-badge {
+      right: 16px;
+      top: 47px;
     }
 
     .match-badge.good { background: var(--green); }
@@ -1439,8 +1444,9 @@
         width: 25px;
         height: 25px;
         font-size: 14px;
-        left: 5px;
-        top: 5px;
+        right: 12px;
+        left: auto;
+        top: 36px;
       }
       .match-badge .tiny { min-width: 18px; height: 18px; font-size: 9px; }
 
@@ -1783,7 +1789,7 @@
       .num strong { font-size: 10px; }
       .spell-desc { min-height: 43px; max-height: 48px; padding: 4px 5px; font-size: 9px; line-height: 1.15; overflow: hidden; }
 
-      .match-badge { width: 24px; height: 24px; top: 4px; left: 4px; font-size: 13px; }
+      .match-badge { width: 24px; height: 24px; top: 37px; right: 12px; left: auto; font-size: 13px; }
       .match-badge .tiny { min-width: 16px; height: 16px; right: -6px; bottom: -5px; font-size: 8px; }
       .sacrifice-btn {
         right: 50%;
@@ -1829,6 +1835,26 @@
       .toast { bottom: calc(var(--mobile-bottom-h) + 10px); font-size: 13px; padding: 10px 12px; }
       .arena .slot.attack-up { animation: attackUp .75s ease-in-out !important; z-index: 22 !important; }
       .arena .slot.attack-down { animation: attackDown .75s ease-in-out !important; z-index: 22 !important; }
+      .arena .match-badge,
+      .hand .match-badge {
+        right: 13px !important;
+        left: auto !important;
+        top: 38px !important;
+      }
+      body.fullscreen-mode .arena {
+        align-self: center !important;
+        grid-template-rows: minmax(0, .92fr) minmax(0, .92fr) !important;
+      }
+
+      body.fullscreen-mode .arena .panel,
+      body.fullscreen-mode .side-panel {
+        align-self: center !important;
+      }
+
+      body.fullscreen-mode .arena .slot {
+        height: min(100%, calc(var(--mobile-card-h) + 34px)) !important;
+        align-self: center !important;
+      }
       .modal { z-index: 150; }
       .modal-box { width: min(92vw, 440px); }
       .info-btn { width: 20px; height: 20px; font-size: 12px; border-width: 1px; right: 4px; top: 30px; }
@@ -9898,7 +9924,7 @@
     function renderSlots(id, who, clickable) {
       const root = document.getElementById(id);
       root.innerHTML = "";
-      if (!clickable) {
+      if (!clickable && window.matchMedia?.("(hover: hover)")?.matches) {
         root.onmouseleave = () => {
           if (state.hoveredEnemySlot !== null) {
             state.hoveredEnemySlot = null;
@@ -10011,6 +10037,14 @@
       if (handCard && handCard.type === "spell") {
         state.selectedPlayerSlot = null;
         return castSpellFromHand(state.selectedHandIndex, side, slotIndex);
+      }
+
+      if (side === "enemy") {
+        const enemyCard = state.enemy.board[slotIndex];
+        state.hoveredEnemySlot = enemyCard && state.hoveredEnemySlot !== slotIndex ? slotIndex : null;
+        state.selectedPlayerSlot = null;
+        render();
+        return;
       }
 
       if (side === "player") {
@@ -10528,7 +10562,7 @@
         log("בתור הראשון לא מתבצעת התקפה, כדי שלצד השני תהיה הזדמנות להעמיד הגנה.");
         state.isBattling = false;
         render();
-        finishCurrentTurnAfterBattle(endingSide);
+        await finishCurrentTurnAfterBattle(endingSide);
         return;
       }
 
@@ -10559,7 +10593,7 @@
 
       state.isBattling = false;
       render();
-      finishCurrentTurnAfterBattle(endingSide);
+      await finishCurrentTurnAfterBattle(endingSide);
     }
 
     async function attack(side, attacker, slot, foe) {
@@ -10647,24 +10681,28 @@
       return Math.min(10, 5 + actionCountBeforeStart);
     }
 
-    function applyStartOfTurnAbilities(side) {
+    async function applyStartOfTurnAbilities(side) {
       const who = side === "player" ? state.player : state.enemy;
-      let total = 0;
+      const events = [];
 
       who.board.forEach(card => {
         if (!card) return;
-        total += abilityAmount(card, "energy");
+        const amount = abilityAmount(card, "energy");
+        if (amount) events.push({ card, amount });
       });
 
-      if (total) {
-        who.energy += total;
-        log(`${who.name} קיבל/ה +${total} אנ״ח מיכולות אנרגיה בתחילת התור.`);
+      for (const ev of events) {
+        await playCardEffect(ev.card, `+${ev.amount} ⚡`, "energy", 620);
+        who.energy += ev.amount;
+        render();
+        log(`${ev.card.name} העניק/ה +${ev.amount} אנ״ח בתחילת התור.`);
+        await sleep(180);
       }
 
-      return total;
+      return events.reduce((total, ev) => total + ev.amount, 0);
     }
 
-    function beginTurn(side, isInitial = false) {
+    async function beginTurn(side, isInitial = false) {
       state.currentTurn = side;
       const who = side === "player" ? state.player : state.enemy;
       const actionCountBeforeStart = state.actionCounts?.[side] || 0;
@@ -10682,24 +10720,25 @@
           who.nextBonus = 0;
           draw(who, 1);
           log(`${who.name} התחיל/ה תור: קיבל/ה ${turnIncome}${bonus ? " + " + bonus : ""} אנ״ח ושלף/ה קלף.`);
+          render();
         }
       }
 
       state.actionCounts[side] = (state.actionCounts[side] || 0) + 1;
-      applyStartOfTurnAbilities(side);
       state.selectedHandIndex = null;
       state.selectedPlayerSlot = null;
       document.getElementById("selectedInfo").textContent = "בחר קלף";
       render();
+      await applyStartOfTurnAbilities(side);
 
       if (side === "enemy" && !state.gameOver) {
         setTimeout(runEnemyTurn, 650);
       }
     }
 
-    function finishCurrentTurnAfterBattle(endingSide) {
+    async function finishCurrentTurnAfterBattle(endingSide) {
       if (state.gameOver) return;
-      beginTurn(endingSide === "player" ? "enemy" : "player");
+      await beginTurn(endingSide === "player" ? "enemy" : "player");
     }
 
     async function runEnemyTurn() {
