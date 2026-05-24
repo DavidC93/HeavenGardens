@@ -812,6 +812,8 @@
 
     .card.attack-up { animation: attackUp .75s ease-in-out; z-index: 20; }
     .card.attack-down { animation: attackDown .75s ease-in-out; z-index: 20; }
+    .slot.attack-up { animation: attackUp .75s ease-in-out; z-index: 20; }
+    .slot.attack-down { animation: attackDown .75s ease-in-out; z-index: 20; }
 
     @keyframes attackUp {
       0% { transform: translateY(0) scale(1); }
@@ -842,6 +844,21 @@
       box-shadow: 5px 7px 0 rgba(0,0,0,.35);
       animation: damagePop 1.45s ease-out forwards;
       direction: ltr;
+    }
+
+    .animation-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 220;
+      pointer-events: none;
+      overflow: visible;
+      contain: layout style;
+    }
+
+    .animation-layer .damage-pop {
+      position: fixed;
+      left: var(--pop-x, 50vw);
+      top: var(--pop-y, 50vh);
     }
 
     .damage-pop.direct { background: var(--red); color: #fff; }
@@ -1434,7 +1451,7 @@
     }
 
   
-    .mobile-menu-btn, .mobile-battle-bar { display: none; }
+    .mobile-menu-btn, .mobile-battle-bar, .mobile-turn-badge { display: none; }
     .mobile-drawer {
       position: fixed; inset: 0; z-index: 120; display: none;
       background: rgba(0,0,0,.62); backdrop-filter: blur(4px);
@@ -1472,6 +1489,29 @@
       header h1 { font-size: 17px; line-height: 1.05; white-space: nowrap; }
       header .subtitle, .top-actions { display: none; }
       .mobile-menu-btn { display: inline-flex; padding: 9px 11px; border-radius: 14px; font-size: 15px; margin-inline-start: auto; }
+
+      .mobile-turn-badge {
+        display: inline-flex;
+        position: fixed;
+        top: calc(env(safe-area-inset-top, 0px) + 10px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 96;
+        align-items: center;
+        justify-content: center;
+        min-width: 92px;
+        height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(16, 18, 29, .88);
+        border: 1px solid rgba(255, 209, 102, .38);
+        box-shadow: 0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+        color: #f8e2a2;
+        font-size: 13px;
+        font-weight: 1000;
+        pointer-events: none;
+        white-space: nowrap;
+      }
 
       /* Mobile compact labels: hide repeated section titles to free vertical space */
       .arena .side-title > span:first-child,
@@ -1787,6 +1827,8 @@
         box-shadow: 0 6px 0 rgba(0,0,0,.42), 0 0 22px rgba(255,209,102,.16);
       }
       .toast { bottom: calc(var(--mobile-bottom-h) + 10px); font-size: 13px; padding: 10px 12px; }
+      .arena .slot.attack-up { animation: attackUp .75s ease-in-out !important; z-index: 22 !important; }
+      .arena .slot.attack-down { animation: attackDown .75s ease-in-out !important; z-index: 22 !important; }
       .modal { z-index: 150; }
       .modal-box { width: min(92vw, 440px); }
       .info-btn { width: 20px; height: 20px; font-size: 12px; border-width: 1px; right: 4px; top: 30px; }
@@ -6387,6 +6429,10 @@
           <input id="startMusicEnabled" type="checkbox" checked>
           הפעל מוזיקת רקע
         </label>
+        <label class="start-music-toggle">
+          <input id="startFullscreenEnabled" type="checkbox">
+          התחל משחק במסך מלא
+        </label>
       </div>
 
       <div class="start-note">
@@ -6565,6 +6611,9 @@
   <div class="mobile-battle-bar">
     <button id="mobileBattleBtn">סיים תור והתחל קרב</button>
   </div>
+
+  <div id="mobileTurnBadge" class="mobile-turn-badge">תור 1 · אתה</div>
+  <div id="animationLayer" class="animation-layer" aria-hidden="true"></div>
 
   <div id="mobileDrawer" class="mobile-drawer">
     <div class="drawer-panel">
@@ -8298,15 +8347,15 @@
 };
 
     const DEFAULT_MOBILE_CARD_LAYOUT_FIELDS = {
-      "name": { "x": 8, "y": 2, "size": 11 },
-      "cost": { "x": 0, "y": 0, "size": 15 },
-      "costBoxW": { "x": 0, "y": 0, "size": 0 },
-      "costBoxH": { "x": 0, "y": 0, "size": 0 },
-      "art": { "x": 1, "y": -7, "size": 46 },
-      "race": { "x": 4, "y": 18, "size": 13.5 },
+      "name": { "x": 8, "y": 2, "size": 10 },
+      "cost": { "x": 2, "y": 0, "size": 12 },
+      "costBoxW": { "x": 0, "y": 0, "size": -1 },
+      "costBoxH": { "x": 0, "y": 0, "size": -1 },
+      "art": { "x": 1, "y": -6, "size": 46 },
+      "race": { "x": 16, "y": -2, "size": 8 },
       "raceBoxW": { "x": -7, "y": -8, "size": -4.5 },
       "raceBoxH": { "x": 0, "y": 0, "size": 0 },
-      "war": { "x": 15, "y": 13, "size": 1.5 },
+      "war": { "x": -16, "y": -15, "size": 8 },
       "warBoxW": { "x": 0, "y": 0, "size": 0 },
       "warBoxH": { "x": 0, "y": 0, "size": 0 },
       "abilities": { "x": 0, "y": -21, "size": 6 },
@@ -8325,21 +8374,21 @@
       "speedBoxW": { "x": 0, "y": 0, "size": 0 },
       "speedBoxH": { "x": 0, "y": 0, "size": 0 },
       "artBoxW": { "x": 0, "y": 0, "size": 12 },
-      "artBoxH": { "x": 0, "y": 0, "size": 2.5 },
-      "spellName": { "x": 5, "y": 2, "size": 11 },
-      "spellCost": { "x": 0, "y": 0, "size": 16 },
-      "spellCostBoxW": { "x": 0, "y": 0, "size": 0 },
-      "spellCostBoxH": { "x": 0, "y": 0, "size": 0 },
-      "spellArt": { "x": 0, "y": -9, "size": 40 },
+      "artBoxH": { "x": 0, "y": 0, "size": 1.5 },
+      "spellName": { "x": 5, "y": 2, "size": 10 },
+      "spellCost": { "x": 0, "y": 0, "size": 12 },
+      "spellCostBoxW": { "x": 0, "y": 0, "size": 1 },
+      "spellCostBoxH": { "x": 0, "y": 0, "size": 1 },
+      "spellArt": { "x": 0, "y": -8, "size": 40 },
       "spellTarget": { "x": 1, "y": 0, "size": 7 },
       "spellDesc": { "x": 0, "y": -8, "size": 8 },
       "spellDescBoxW": { "x": 0, "y": 0, "size": 0 },
       "spellDescBoxH": { "x": 0, "y": 0, "size": 18 },
       "spellArtBoxW": { "x": 0, "y": 0, "size": 15.5 },
-      "spellArtBoxH": { "x": 0, "y": 0, "size": 22 }
+      "spellArtBoxH": { "x": 0, "y": 0, "size": 19 }
     };
 
-    const CARD_LAYOUT_STORAGE_KEY = "heavenly_gardens_card_layout_editor_v11_mobile_defaults";
+    const CARD_LAYOUT_STORAGE_KEY = "heavenly_gardens_card_layout_editor_v12_mobile_defaults";
     let cardLayoutConfig = JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT_CONFIG));
     let selectedLayoutTarget = "name";
     let layoutEditMode = false;
@@ -9321,9 +9370,14 @@
       setMusicEnabled(!musicEnabled);
     }
 
-    function startGameFromOverlay() {
+    async function startGameFromOverlay() {
       const overlay = document.getElementById("startOverlay");
       if (overlay) overlay.classList.add("hidden");
+
+      const startFullscreenEnabled = document.getElementById("startFullscreenEnabled");
+      if (startFullscreenEnabled?.checked) {
+        await enterGameFullscreen();
+      }
 
       try {
         const startMusicEnabled = document.getElementById("startMusicEnabled");
@@ -9816,6 +9870,8 @@
     function render() {
       document.getElementById("turn").textContent = state.turn;
       document.getElementById("income").textContent = state.currentTurn === "player" ? "שלך" : "מחשב";
+      const mobileTurnBadge = document.getElementById("mobileTurnBadge");
+      if (mobileTurnBadge) mobileTurnBadge.textContent = `תור ${state.turn} · ${state.currentTurn === "player" ? "אתה" : "מחשב"}`;
       document.getElementById("playerHp").textContent = state.player.hp;
       document.getElementById("playerEnergy").textContent = state.player.energy;
       document.getElementById("enemyHp").textContent = state.enemy.hp;
@@ -10209,21 +10265,37 @@
 
     async function animateAttack(side, slot) {
       const root = document.getElementById(side === "player" ? "playerSlots" : "enemySlots");
-      const card = root?.querySelector(`.slot[data-slot="${slot}"] .card`);
-      if (!card) return;
+      const slotEl = root?.querySelector(`.slot[data-slot="${slot}"]`);
+      const card = slotEl?.querySelector(".card");
+      if (!card || !slotEl) return;
       const className = side === "player" ? "attack-up" : "attack-down";
       card.classList.add(className);
+      slotEl.classList.add(className);
       await sleep(760);
       card.classList.remove(className);
+      slotEl.classList.remove(className);
+    }
+
+    function animationLayer() {
+      return document.getElementById("animationLayer") || document.body;
+    }
+
+    function popOnViewportElement(el, text, classes = "") {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const x = Math.max(22, Math.min(window.innerWidth - 22, rect.left + rect.width / 2));
+      const y = Math.max(34, Math.min(window.innerHeight - 34, rect.top + rect.height * .42));
+      const pop = document.createElement("div");
+      pop.className = `damage-pop ${classes}`;
+      pop.textContent = text;
+      pop.style.setProperty("--pop-x", `${x}px`);
+      pop.style.setProperty("--pop-y", `${y}px`);
+      animationLayer().appendChild(pop);
+      setTimeout(() => pop.remove(), 1500);
     }
 
     function popDamageOnElement(el, amount, direct = false) {
-      if (!el) return;
-      const pop = document.createElement("div");
-      pop.className = `damage-pop ${direct ? "direct" : ""}`;
-      pop.textContent = `-${amount}`;
-      el.appendChild(pop);
-      setTimeout(() => pop.remove(), 1500);
+      popOnViewportElement(el, `-${amount}`, direct ? "direct" : "");
     }
 
     function popDamageOnCard(side, slot, amount) {
@@ -10255,11 +10327,7 @@
       const slotEl = root?.querySelector(`.slot[data-slot="${loc.slot}"]`);
       if (!slotEl) return;
 
-      const pop = document.createElement("div");
-      pop.className = `damage-pop bonus ${cls}`;
-      pop.textContent = text;
-      slotEl.appendChild(pop);
-      setTimeout(() => pop.remove(), 1500);
+      popOnViewportElement(slotEl, text, `bonus ${cls}`);
     }
 
 
