@@ -1843,7 +1843,7 @@
       }
       body.fullscreen-mode .arena {
         align-self: center !important;
-        height: var(--mobile-arena-h, 396px) !important;
+        height: var(--mobile-fullscreen-arena-h, 372px) !important;
         grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) !important;
       }
 
@@ -1855,6 +1855,13 @@
       body.fullscreen-mode .arena .slot {
         height: 100% !important;
         align-self: center !important;
+      }
+      body.fullscreen-mode .wrap {
+        grid-template-rows: var(--mobile-hud-h) minmax(0, var(--mobile-fullscreen-arena-h, 372px)) minmax(var(--mobile-hand-h), 1fr) !important;
+      }
+
+      body.fullscreen-mode .hand-panel {
+        height: auto !important;
       }
       .modal { z-index: 150; }
       .modal-box { width: min(92vw, 440px); }
@@ -5739,7 +5746,7 @@
         --mobile-card-w: clamp(108px, 29.5vw, 122px);
         --mobile-card-h: calc(var(--mobile-card-w) * 1.40625);
         --mobile-hand-h: calc(var(--mobile-card-h) + 18px);
-        --mobile-arena-h: min(41dvh, calc((var(--mobile-card-h) * 2) + 54px));
+        --mobile-fullscreen-arena-h: min(44dvh, calc((var(--mobile-card-h) * 2) + 76px));
         --mobile-gap: 6px;
       }
 
@@ -5814,8 +5821,7 @@
         line-height: 1;
       }
 
-      .wrap,
-      body.fullscreen-mode .wrap {
+      .wrap {
         position: fixed !important;
         inset: var(--mobile-header-h) 0 var(--mobile-bottom-h) 0 !important;
         width: 100vw !important;
@@ -5826,7 +5832,7 @@
         padding: var(--mobile-gap) !important;
         display: grid !important;
         grid-template-columns: 1fr !important;
-        grid-template-rows: var(--mobile-hud-h) minmax(0, var(--mobile-arena-h, 396px)) minmax(0, 1fr) !important;
+        grid-template-rows: var(--mobile-hud-h) minmax(0, 1fr) var(--mobile-hand-h) !important;
         gap: var(--mobile-gap) !important;
         overflow: hidden !important;
       }
@@ -5956,8 +5962,6 @@
         display: grid !important;
         grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: var(--mobile-gap) !important;
-        height: var(--mobile-arena-h, 396px) !important;
-        align-self: start !important;
       }
 
       .arena .panel,
@@ -6028,10 +6032,9 @@
         justify-self: center !important;
       }
 
-      .hand-panel,
-      body.fullscreen-mode .hand-panel {
+      .hand-panel {
         grid-row: 3 !important;
-        height: auto !important;
+        height: var(--mobile-hand-h) !important;
         min-height: 0 !important;
         padding: 6px 5px calc(6px + env(safe-area-inset-bottom, 0px)) !important;
         border-radius: 16px !important;
@@ -6040,8 +6043,7 @@
         background: rgba(20,22,34,.9) !important;
       }
 
-      .hand,
-      body.fullscreen-mode .hand {
+      .hand {
         height: 100% !important;
         min-height: 0 !important;
         padding: 0 4px 8px !important;
@@ -6054,9 +6056,7 @@
       }
 
       .hand .card.monster-framed,
-      .hand .card.spell-framed,
-      body.fullscreen-mode .hand .card.monster-framed,
-      body.fullscreen-mode .hand .card.spell-framed {
+      .hand .card.spell-framed {
         width: var(--mobile-card-w) !important;
         height: var(--mobile-card-h) !important;
         min-width: var(--mobile-card-w) !important;
@@ -6072,6 +6072,19 @@
       .hand .card.monster-framed.selected,
       .hand .card.spell-framed.selected {
         transform: translateY(-5px) !important;
+      }
+
+      body.fullscreen-mode .wrap {
+        grid-template-rows: var(--mobile-hud-h) minmax(0, var(--mobile-fullscreen-arena-h, 372px)) minmax(var(--mobile-hand-h), 1fr) !important;
+      }
+
+      body.fullscreen-mode .arena {
+        height: var(--mobile-fullscreen-arena-h, 372px) !important;
+        align-self: start !important;
+      }
+
+      body.fullscreen-mode .hand-panel {
+        height: auto !important;
       }
 
       .mobile-battle-bar {
@@ -6361,7 +6374,7 @@
         --mobile-hud-h: 36px;
         --mobile-card-w: clamp(102px, 29vw, 114px);
         --mobile-hand-h: calc(var(--mobile-card-h) + 16px);
-        --mobile-arena-h: min(40dvh, calc((var(--mobile-card-h) * 2) + 48px));
+        --mobile-fullscreen-arena-h: min(43dvh, calc((var(--mobile-card-h) * 2) + 68px));
       }
 
       .mobile-battle-bar button {
@@ -9973,6 +9986,11 @@
           }
         } else {
           slot.innerHTML = `<div class="slot-label">${idx + 1}</div>${cardHtml(card)}`;
+          if (card) {
+            slot.setAttribute("data-enemy-selectable", "true");
+            const enemyCardEl = slot.querySelector(".card");
+            if (enemyCardEl) enemyCardEl.setAttribute("data-enemy-slot", String(idx));
+          }
           let enemyPointer = null;
           const selectEnemy = (ev) => {
             if (!card || state.isBattling || state.gameOver) return;
@@ -10856,9 +10874,22 @@
       if (drawer) drawer.classList.remove("open");
     }
 
-    function selectEnemySlotForMatchup(slotIndex) {
+    let lastEnemyTapHandledAt = 0;
+
+    function clearEnemyMatchupSelection() {
+      if (state.hoveredEnemySlot === null) return false;
+      state.hoveredEnemySlot = null;
+      document.getElementById("selectedInfo").textContent = "בחר קלף";
+      render();
+      return true;
+    }
+
+    function selectEnemySlotForMatchup(slotIndex, toggle = true) {
       const enemyCard = state.enemy?.board?.[slotIndex];
       if (!enemyCard || state.isBattling || state.gameOver) return false;
+      if (toggle && state.hoveredEnemySlot === slotIndex) {
+        return clearEnemyMatchupSelection();
+      }
       state.hoveredEnemySlot = slotIndex;
       state.selectedPlayerSlot = null;
       state.selectedHandIndex = null;
@@ -10873,12 +10904,18 @@
       enemySlots.dataset.tapSelectionBound = "1";
 
       const pick = ev => {
+        if (ev.type === "click" && performance.now() - lastEnemyTapHandledAt < 360) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          return;
+        }
         const slot = ev.target.closest?.("#enemySlots .slot");
         if (!slot) return;
         const slotIndex = Number(slot.dataset.slot);
         if (!Number.isInteger(slotIndex)) return;
         if (!state.enemy?.board?.[slotIndex]) return;
         if (!selectEnemySlotForMatchup(slotIndex)) return;
+        lastEnemyTapHandledAt = performance.now();
         ev.preventDefault();
         ev.stopPropagation();
       };
@@ -10886,6 +10923,13 @@
       enemySlots.addEventListener("click", pick, true);
       enemySlots.addEventListener("pointerup", pick, true);
       enemySlots.addEventListener("touchend", pick, true);
+
+      document.addEventListener("click", ev => {
+        if (state.hoveredEnemySlot === null) return;
+        if (performance.now() - lastEnemyTapHandledAt < 360) return;
+        if (ev.target.closest?.("#enemySlots .slot")) return;
+        clearEnemyMatchupSelection();
+      }, true);
     }
 
     document.getElementById("battleBtn").onclick = startBattle;
