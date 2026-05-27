@@ -5532,25 +5532,21 @@
     }
 
   
-    /* v64: fullscreen hand-only visual scale fix.
-       Do NOT touch arena cards. Hand cards keep their normal 168x236 internal layout,
-       and only get visually scaled down to match the arena cards. */
+    /* v64-fix: fullscreen hand cards use same size & scale as arena cards.
+       Both arena and hand cards share the base 168×236 dimensions scaled by --fs-card-scale. */
     body.fullscreen-mode {
-      --fs-hand-match-scale: calc(var(--fs-card-scale) * 0.9167);
-      --fs-hand-match-hover-scale: calc(var(--fs-card-hover-scale) * 0.9167);
-      --fs-hand-match-w: calc(168px * var(--fs-hand-match-scale));
-      --fs-hand-match-h: calc(236px * var(--fs-hand-match-scale));
+      --fs-hand-h: calc(236px * var(--fs-card-scale) + 58px);
     }
 
     body.fullscreen-mode .hand-panel {
-      height: calc(var(--fs-hand-match-h) + 58px) !important;
-      min-height: calc(var(--fs-hand-match-h) + 58px) !important;
+      height: var(--fs-hand-h) !important;
+      min-height: var(--fs-hand-h) !important;
       padding: 16px 22px 16px !important;
       overflow: hidden !important;
     }
 
     body.fullscreen-mode .wrap {
-      grid-template-rows: minmax(0, 1fr) calc(var(--fs-hand-match-h) + 58px) !important;
+      grid-template-rows: minmax(0, 1fr) var(--fs-hand-h) !important;
     }
 
     body.fullscreen-mode .hand {
@@ -5562,6 +5558,7 @@
       overflow-y: hidden !important;
     }
 
+    /* Hand cards: same base size as arena cards (168×236), same scale factor */
     body.fullscreen-mode .hand .card.monster-framed,
     body.fullscreen-mode .hand .card.spell-framed {
       width: 168px !important;
@@ -5570,8 +5567,8 @@
       min-height: 236px !important;
       max-width: 168px !important;
       max-height: 236px !important;
-      flex: 0 0 var(--fs-hand-match-w) !important;
-      transform: scale(var(--fs-hand-match-scale)) !important;
+      flex: 0 0 calc(168px * var(--fs-card-scale)) !important;
+      transform: scale(var(--fs-card-scale)) !important;
       transform-origin: center center !important;
       margin: 0 !important;
       align-self: center !important;
@@ -5579,7 +5576,12 @@
 
     body.fullscreen-mode .hand .card.monster-framed:hover,
     body.fullscreen-mode .hand .card.spell-framed:hover {
-      transform: translateY(-4px) scale(var(--fs-hand-match-hover-scale)) !important;
+      transform: translateY(-4px) scale(var(--fs-card-hover-scale)) !important;
+    }
+
+    /* Arena slot sizing: ensure slots properly contain scaled cards */
+    body.fullscreen-mode .slot {
+      min-height: calc(236px * var(--fs-card-scale) + 24px) !important;
     }
 
     @media (min-width: 1700px) {
@@ -5595,11 +5597,6 @@
     }
 
     @media (max-width: 720px) {
-      body.fullscreen-mode {
-        --fs-hand-match-scale: 1;
-        --fs-hand-match-hover-scale: 1;
-      }
-
       body.fullscreen-mode .hand-panel {
         height: var(--mobile-hand-h) !important;
         min-height: var(--mobile-hand-h) !important;
@@ -5607,6 +5604,10 @@
 
       body.fullscreen-mode .wrap {
         grid-template-rows: auto 1fr var(--mobile-hand-h) var(--mobile-bottom-h) !important;
+      }
+
+      body.fullscreen-mode .slot {
+        min-height: 0 !important;
       }
 
       body.fullscreen-mode .hand .card.monster-framed,
@@ -9974,7 +9975,7 @@
 
             const moveHint = document.createElement("div");
             moveHint.className = "move-card-hint";
-            moveHint.textContent = "הזזה: בחר משבצת ריקה · 1 אנ״ח";
+            moveHint.textContent = "ריקה · 1 אנ״ח | החלפה · 3 אנ״ח";
             slot.appendChild(moveHint);
           }
 
@@ -9984,6 +9985,13 @@
             moveTarget.textContent = "הזז לכאן · 1";
             slot.appendChild(moveTarget);
           }
+
+          if (card && state.selectedPlayerSlot !== null && state.selectedPlayerSlot !== idx && !state.isBattling && !state.gameOver) {
+            const swapTarget = document.createElement("div");
+            swapTarget.className = "move-target-hint";
+            swapTarget.textContent = "החלף · 3";
+            slot.appendChild(swapTarget);
+          }
         } else {
           slot.innerHTML = `<div class="slot-label">${idx + 1}</div>${cardHtml(card)}`;
           if (card) {
@@ -9992,8 +10000,17 @@
             if (enemyCardEl) enemyCardEl.setAttribute("data-enemy-slot", String(idx));
           }
           let enemyPointer = null;
-          const selectEnemy = (ev) => {
+          let enemyTapHandledAt = 0;
+          const selectEnemy = (ev, spellCaptureOnly = false) => {
             if (!card || state.isBattling || state.gameOver) return;
+            if (spellCaptureOnly && selectedCard()?.type !== "spell") return;
+            const now = performance.now();
+            if (now - enemyTapHandledAt < 280) {
+              ev.preventDefault();
+              ev.stopPropagation();
+              return;
+            }
+            enemyTapHandledAt = now;
             ev.preventDefault();
             ev.stopPropagation();
             handleSlotClick("enemy", idx);
@@ -10009,6 +10026,13 @@
             if (moved < 12) selectEnemy(ev);
           };
           slot.ontouchend = selectEnemy;
+          slot.addEventListener("click", ev => selectEnemy(ev, true), true);
+          slot.addEventListener("touchend", ev => selectEnemy(ev, true), true);
+          slot.addEventListener("pointerup", ev => {
+            if (!enemyPointer) return;
+            const moved = Math.abs(ev.clientX - enemyPointer.x) + Math.abs(ev.clientY - enemyPointer.y);
+            if (moved < 12) selectEnemy(ev, true);
+          }, true);
           slot.onmouseenter = () => {
             if (!card || state.hoveredEnemySlot === idx) return;
             state.hoveredEnemySlot = idx;
@@ -10096,10 +10120,14 @@
           return moveSelectedBoardCard(slotIndex);
         }
 
+        if (boardCard && state.selectedPlayerSlot !== null && state.selectedPlayerSlot !== slotIndex && !state.isBattling && !state.gameOver) {
+          return swapSelectedBoardCards(slotIndex);
+        }
+
         if (boardCard && !state.isBattling && !state.gameOver) {
           state.selectedPlayerSlot = state.selectedPlayerSlot === slotIndex ? null : slotIndex;
           document.getElementById("selectedInfo").textContent =
-            state.selectedPlayerSlot === null ? "בחר קלף" : `נבחרה בזירה: ${boardCard.name} · לחץ על משבצת ריקה להזזה בעלות 1 אנ״ח`;
+            state.selectedPlayerSlot === null ? "בחר קלף" : `נבחרה בזירה: ${boardCard.name} · ריקה: 1 אנ״ח · החלפה: 3 אנ״ח`;
           render();
         }
       }
@@ -10134,6 +10162,39 @@
       state.selectedPlayerSlot = null;
       document.getElementById("selectedInfo").textContent = "בחר קלף";
       log(`${card.name} זזה ממשבצת ${sourceSlotIndex + 1} למשבצת ${targetSlotIndex + 1}. שילמת 1 אנ״ח.`);
+      render();
+      return true;
+    }
+
+    function swapSelectedBoardCards(targetSlotIndex) {
+      if (state.currentTurn !== "player") return toast("זה לא התור שלך.");
+      if (state.gameOver || state.isBattling) return;
+      if (state.selectedPlayerSlot === null) return false;
+      if (state.selectedPlayerSlot === targetSlotIndex) return false;
+
+      const sourceSlotIndex = state.selectedPlayerSlot;
+      const sourceCard = state.player.board[sourceSlotIndex];
+      const targetCard = state.player.board[targetSlotIndex];
+
+      if (!sourceCard) {
+        state.selectedPlayerSlot = null;
+        return false;
+      }
+
+      if (!targetCard) return moveSelectedBoardCard(targetSlotIndex);
+
+      const swapCost = 3;
+      if (state.player.energy < swapCost) {
+        return toast("אין מספיק אנ״ח להחלפה. עלות החלפה היא 3 אנ״ח.");
+      }
+
+      state.player.energy -= swapCost;
+      state.player.board[sourceSlotIndex] = targetCard;
+      state.player.board[targetSlotIndex] = sourceCard;
+      state.selectedPlayerSlot = null;
+      state.selectedHandIndex = null;
+      document.getElementById("selectedInfo").textContent = "בחר קלף";
+      log(`${sourceCard.name} ו־${targetCard.name} החליפו מקומות. שילמת 3 אנ״ח.`);
       render();
       return true;
     }
@@ -10874,8 +10935,6 @@
       if (drawer) drawer.classList.remove("open");
     }
 
-    let lastEnemyTapHandledAt = 0;
-
     function clearEnemyMatchupSelection() {
       if (state.hoveredEnemySlot === null) return false;
       state.hoveredEnemySlot = null;
@@ -10898,39 +10957,13 @@
       return true;
     }
 
-    function bindEnemyTapSelection() {
-      const enemySlots = document.getElementById("enemySlots");
-      if (!enemySlots || enemySlots.dataset.tapSelectionBound === "1") return;
-      enemySlots.dataset.tapSelectionBound = "1";
-
-      const pick = ev => {
-        if (ev.type === "click" && performance.now() - lastEnemyTapHandledAt < 360) {
-          ev.preventDefault();
-          ev.stopPropagation();
-          return;
-        }
-        const slot = ev.target.closest?.("#enemySlots .slot");
-        if (!slot) return;
-        const slotIndex = Number(slot.dataset.slot);
-        if (!Number.isInteger(slotIndex)) return;
-        if (!state.enemy?.board?.[slotIndex]) return;
-        if (!selectEnemySlotForMatchup(slotIndex)) return;
-        lastEnemyTapHandledAt = performance.now();
-        ev.preventDefault();
-        ev.stopPropagation();
-      };
-
-      enemySlots.addEventListener("click", pick, true);
-      enemySlots.addEventListener("pointerup", pick, true);
-      enemySlots.addEventListener("touchend", pick, true);
-
-      document.addEventListener("click", ev => {
-        if (state.hoveredEnemySlot === null) return;
-        if (performance.now() - lastEnemyTapHandledAt < 360) return;
-        if (ev.target.closest?.("#enemySlots .slot")) return;
-        clearEnemyMatchupSelection();
-      }, true);
-    }
+    /* Click-outside-to-dismiss for enemy matchup selection.
+       The inline handlers in renderSlots() handle the actual enemy card taps. */
+    document.addEventListener("click", ev => {
+      if (state.hoveredEnemySlot === null) return;
+      if (ev.target.closest?.("#enemySlots .slot")) return;
+      clearEnemyMatchupSelection();
+    });
 
     document.getElementById("battleBtn").onclick = startBattle;
     document.getElementById("mobileBattleBtn").onclick = startBattle;
@@ -10955,7 +10988,7 @@
     document.getElementById("mobileDrawer").onclick = e => {
       if (e.target.id === "mobileDrawer") closeMobileDrawer();
     };
-    bindEnemyTapSelection();
+    /* bindEnemyTapSelection removed — inline handlers in renderSlots() handle enemy taps */
     init();
   
     // v32 layout editor robust bootstrap
