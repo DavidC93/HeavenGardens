@@ -7,9 +7,14 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "check": "npm run build"
+    "check": "npm run build",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "db:seed:cards": "node scripts/db-seed-cards.mjs",
+    "db:setup": "npm run db:migrate && npm run db:seed:cards"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0"
+  },
   "devDependencies": {
     "vite": "^5.4.11"
   }

@@ -4946,6 +4946,135 @@
       font-weight: 850;
     }
 
+    .account-overlay,
+    .admin-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(6px);
+    }
+
+    .account-overlay.hidden,
+    .admin-overlay.hidden { display: none !important; }
+
+    .account-panel,
+    .admin-panel {
+      width: min(920px, 96vw);
+      max-height: 92vh;
+      overflow: auto;
+      background: linear-gradient(160deg, rgba(20,22,34,.98), rgba(10,12,20,.98));
+      border: 1px solid rgba(255,209,102,.35);
+      border-radius: 18px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.58);
+      padding: 18px;
+      color: #f7f2df;
+    }
+
+    .account-head,
+    .admin-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .account-head h2,
+    .admin-head h2 { margin: 0; font-size: 24px; }
+
+    .account-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .account-box,
+    .admin-box {
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 12px;
+      padding: 14px;
+      background: rgba(255,255,255,.05);
+    }
+
+    .account-box h3,
+    .admin-box h3 { margin: 0 0 10px; }
+
+    .account-box label,
+    .admin-box label {
+      display: grid;
+      gap: 5px;
+      margin: 9px 0;
+      font-weight: 900;
+      color: #ffefb4;
+    }
+
+    .account-box input,
+    .admin-box textarea {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(0,0,0,.36);
+      color: #fff;
+      font: inherit;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .admin-card-list {
+      display: grid;
+      gap: 7px;
+      max-height: 62vh;
+      overflow: auto;
+    }
+
+    .admin-card-item {
+      text-align: right;
+      border-radius: 10px;
+      box-shadow: none;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+    }
+
+    .admin-card-item.active {
+      background: #ffd166;
+      color: #161616;
+    }
+
+    #adminCardJson {
+      min-height: 430px;
+      direction: ltr;
+      text-align: left;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .account-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #ffe6a1;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+      .account-grid,
+      .admin-grid { grid-template-columns: 1fr; }
+      .account-panel,
+      .admin-panel { padding: 12px; border-radius: 14px; }
+      #adminCardJson { min-height: 330px; }
+    }
+
     @media (max-width: 720px) {
       .deck-ability-popup {
         left: 12px;
@@ -6610,6 +6739,68 @@
     </div>
   </div>
 
+  <div id="accountOverlay" class="account-overlay hidden">
+    <div class="account-panel">
+      <div class="account-head">
+        <h2>חשבון שחקן</h2>
+        <button id="closeAccountPanelBtn" type="button" class="secondary">סגור</button>
+      </div>
+      <div id="accountStatus" class="account-status">לא מחובר</div>
+      <div class="account-grid">
+        <div class="account-box">
+          <h3>התחברות</h3>
+          <label>אימייל <input id="loginEmail" type="email" autocomplete="email"></label>
+          <label>סיסמה <input id="loginPassword" type="password" autocomplete="current-password"></label>
+          <button id="loginBtn" type="button">התחבר</button>
+        </div>
+        <div class="account-box">
+          <h3>הרשמה</h3>
+          <label>שם תצוגה <input id="registerName" type="text" autocomplete="nickname"></label>
+          <label>אימייל <input id="registerEmail" type="email" autocomplete="email"></label>
+          <label>סיסמה <input id="registerPassword" type="password" autocomplete="new-password" placeholder="לפחות 8 תווים"></label>
+          <button id="registerBtn" type="button">צור חשבון</button>
+        </div>
+        <div class="account-box">
+          <h3>שכחתי סיסמה</h3>
+          <label>אימייל <input id="resetEmail" type="email" autocomplete="email"></label>
+          <button id="requestResetBtn" type="button" class="secondary">שלח קישור איפוס</button>
+          <div class="hint">כאשר ספק מייל יחובר, הקישור יישלח למייל. עד אז אפשר לבדוק את הקישור שמוחזר מהשרת.</div>
+        </div>
+        <div class="account-box">
+          <h3>איפוס עם טוקן</h3>
+          <label>טוקן <input id="resetToken" type="text"></label>
+          <label>סיסמה חדשה <input id="resetPassword" type="password" autocomplete="new-password"></label>
+          <button id="resetPasswordBtn" type="button" class="secondary">אפס סיסמה</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminOverlay" class="admin-overlay hidden">
+    <div class="admin-panel">
+      <div class="admin-head">
+        <h2>ניהול קלפים</h2>
+        <button id="closeAdminPanelBtn" type="button" class="secondary">סגור</button>
+      </div>
+      <div class="admin-grid">
+        <div class="admin-box">
+          <h3>קלפים</h3>
+          <div id="adminCardList" class="admin-card-list"></div>
+        </div>
+        <div class="admin-box">
+          <h3>JSON של הקלף</h3>
+          <div class="hint">אפשר לערוך כאן כל שדה: שם, עלות, סטטים, תמונה, אפקטים, יכולות ועוד.</div>
+          <textarea id="adminCardJson" spellcheck="false"></textarea>
+          <div class="deck-builder-actions" style="margin-top:10px">
+            <button id="saveAdminCardBtn" type="button">שמור קלף</button>
+            <button id="newMonsterAdminBtn" type="button" class="secondary">מפלצת חדשה</button>
+            <button id="newSpellAdminBtn" type="button" class="secondary">קסם חדש</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <header>
     <div>
       <h1>⚡ קרבות קלפים: גני השמיים</h1>
@@ -6624,6 +6815,9 @@
 
       <button id="cheatsToggle" type="button" onclick="toggleCheatsPanel(); event.stopPropagation();">🧪 צ׳יטים</button>
       <button id="layoutEditToggle" type="button" class="secondary" onclick="toggleLayoutEditor(); event.stopPropagation();">🎛️ עריכת קלפים</button>
+      <button id="accountBtn" type="button" class="secondary">חשבון</button>
+      <button id="adminCardsBtn" type="button" class="secondary" style="display:none">אדמין קלפים</button>
+      <button id="logoutBtn" type="button" class="secondary" style="display:none">התנתק</button>
       <button id="battleBtn">סיים תור והתחל קרב</button>
       <label class="file-label secondary">
         ייבא קלפים JSON
@@ -6724,6 +6918,9 @@
           <button id="drawerMusicToggleBtn" class="secondary">🔊 מוזיקה</button>
 
           <button id="drawerDeckBuilderBtn" class="secondary">🃏 חפיסה</button>
+          <button id="drawerAccountBtn" class="secondary">👤 חשבון</button>
+          <button id="drawerAdminCardsBtn" class="secondary" style="display:none">🛠️ אדמין קלפים</button>
+          <button id="drawerLogoutBtn" class="secondary" style="display:none">התנתק</button>
           <button id="drawerCheatsToggle" class="secondary">🧪 בדיקות</button>
           <button id="drawerLayoutEditToggle" class="secondary">🎛️ קלפים</button>
           <button id="drawerRestartBtn" class="secondary">משחק חדש</button>
@@ -8091,6 +8288,11 @@
 ];
 
     const CARD_DATA_STORAGE_KEY = "heavenly_gardens_cards_v39_sequential_ids";
+    const API_BASE = "/.netlify/functions";
+    let remoteCardData = null;
+    let currentUser = null;
+    let remoteDeckCounts = null;
+    let adminSelectedCardId = null;
 
 
     const STAT_CAP = 99;
@@ -8155,6 +8357,7 @@
     }
 
     function loadCardData() {
+      if (remoteCardData) return normalizeCardData(remoteCardData);
       const raw = localStorage.getItem(CARD_DATA_STORAGE_KEY);
       if (!raw) return normalizeCardData({ monsterCards: CARD_POOL, spellCards: SPELL_POOL });
       try {
@@ -8170,6 +8373,79 @@
 
     function activeSpellPool() {
       return loadCardData().spellCards;
+    }
+
+    async function apiRequest(path, options = {}) {
+      const response = await fetch(`${API_BASE}${path}`, {
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+          ...(options.headers || {})
+        },
+        ...options,
+        body: options.body && typeof options.body !== "string" ? JSON.stringify(options.body) : options.body
+      });
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!response.ok) {
+        const error = new Error(data.message || data.error || "API request failed");
+        error.data = data;
+        error.status = response.status;
+        throw error;
+      }
+      return data;
+    }
+
+    async function loadRemoteCards() {
+      try {
+        const data = await apiRequest("/cards");
+        if (Array.isArray(data.monsterCards) && Array.isArray(data.spellCards) && (data.monsterCards.length || data.spellCards.length)) {
+          remoteCardData = normalizeCardData(data);
+          return true;
+        }
+      } catch (err) {
+        console.warn("remote card catalog unavailable; using local cards", err);
+      }
+      return false;
+    }
+
+    async function loadCurrentUser() {
+      try {
+        const data = await apiRequest("/auth-me");
+        currentUser = data.user || null;
+      } catch {
+        currentUser = null;
+      }
+      renderAccountUi();
+      return currentUser;
+    }
+
+    async function loadRemoteDeck() {
+      if (!currentUser) return null;
+      try {
+        const data = await apiRequest("/deck");
+        remoteDeckCounts = data.counts || {};
+        localStorage.setItem(CUSTOM_DECK_STORAGE_KEY, JSON.stringify({
+          updatedAt: new Date().toISOString(),
+          counts: remoteDeckCounts
+        }));
+        return remoteDeckCounts;
+      } catch (err) {
+        console.warn("remote deck unavailable", err);
+        return null;
+      }
+    }
+
+    async function saveRemoteDeckCounts(counts) {
+      if (!currentUser) return;
+      try {
+        const data = await apiRequest("/deck", { method: "PUT", body: { counts } });
+        remoteDeckCounts = data.counts || counts;
+        toast("החפיסה נשמרה בענן.");
+      } catch (err) {
+        toast("החפיסה נשמרה מקומית, אך לא נשמרה בענן.");
+        console.warn("remote deck save failed", err);
+      }
     }
 
     const state = {
@@ -9017,6 +9293,14 @@
     }
 
     function loadDeckBuilderCounts() {
+      if (remoteDeckCounts && typeof remoteDeckCounts === "object") {
+        deckBuilderCounts = {};
+        allAvailableDeckCards().forEach(card => {
+          const value = Math.max(0, Math.min(DECK_MAX_COPIES, Number(remoteDeckCounts[card.id] || 0)));
+          if (value) deckBuilderCounts[card.id] = value;
+        });
+        if (selectedDeckSize()) return;
+      }
       try {
         const saved = JSON.parse(localStorage.getItem(CUSTOM_DECK_STORAGE_KEY) || "null");
         if (saved && saved.counts && typeof saved.counts === "object") {
@@ -9050,6 +9334,7 @@
         updatedAt: new Date().toISOString(),
         counts: deckBuilderCounts
       }));
+      saveRemoteDeckCounts({ ...deckBuilderCounts });
       if (showMessage) toast("החפיסה נשמרה ותשמש במשחק הבא.");
       return true;
     }
@@ -11189,6 +11474,202 @@
       init();
     }
 
+    function renderAccountUi() {
+      const label = currentUser ? `${currentUser.display_name || currentUser.email} (${currentUser.role})` : "לא מחובר";
+      const accountStatus = document.getElementById("accountStatus");
+      if (accountStatus) accountStatus.textContent = currentUser ? `מחובר: ${label}` : "לא מחובר";
+
+      ["logoutBtn", "drawerLogoutBtn"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = currentUser ? "" : "none";
+      });
+
+      ["adminCardsBtn", "drawerAdminCardsBtn"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = currentUser?.role === "admin" ? "" : "none";
+      });
+    }
+
+    function openAccountPanel() {
+      const token = new URLSearchParams(location.search).get("resetToken");
+      if (token) {
+        const resetToken = document.getElementById("resetToken");
+        if (resetToken) resetToken.value = token;
+      }
+      renderAccountUi();
+      document.getElementById("accountOverlay")?.classList.remove("hidden");
+    }
+
+    function closeAccountPanel() {
+      document.getElementById("accountOverlay")?.classList.add("hidden");
+    }
+
+    async function loginAccount() {
+      try {
+        const data = await apiRequest("/auth-login", {
+          method: "POST",
+          body: {
+            email: document.getElementById("loginEmail")?.value,
+            password: document.getElementById("loginPassword")?.value
+          }
+        });
+        currentUser = data.user;
+        await loadRemoteDeck();
+        renderAccountUi();
+        closeAccountPanel();
+        toast("התחברת בהצלחה.");
+      } catch {
+        toast("התחברות נכשלה. אם Neon עדיין לא מוגדר, יש להוסיף DATABASE_URL ב־Netlify.");
+      }
+    }
+
+    async function registerAccount() {
+      try {
+        const data = await apiRequest("/auth-register", {
+          method: "POST",
+          body: {
+            displayName: document.getElementById("registerName")?.value,
+            email: document.getElementById("registerEmail")?.value,
+            password: document.getElementById("registerPassword")?.value
+          }
+        });
+        currentUser = data.user;
+        await saveRemoteDeckCounts({ ...deckBuilderCounts });
+        renderAccountUi();
+        closeAccountPanel();
+        toast(currentUser.role === "admin" ? "החשבון הראשון נוצר כאדמין." : "החשבון נוצר בהצלחה.");
+      } catch (err) {
+        toast(err?.data?.error === "email_exists" ? "האימייל כבר קיים." : "הרשמה נכשלה. ודא סיסמה של 8 תווים וש־Neon מוגדר.");
+      }
+    }
+
+    async function logoutAccount() {
+      try { await apiRequest("/auth-logout", { method: "POST" }); } catch {}
+      currentUser = null;
+      remoteDeckCounts = null;
+      renderAccountUi();
+      toast("התנתקת.");
+    }
+
+    async function requestPasswordReset() {
+      try {
+        const data = await apiRequest("/auth-request-reset", {
+          method: "POST",
+          body: { email: document.getElementById("resetEmail")?.value }
+        });
+        if (data.resetUrl) {
+          const url = new URL(data.resetUrl);
+          document.getElementById("resetToken").value = url.searchParams.get("resetToken") || "";
+          toast("נוצר קישור איפוס לבדיקות. הטוקן הוזן בשדה האיפוס.");
+        } else {
+          toast("אם האימייל קיים, יישלח קישור איפוס.");
+        }
+      } catch {
+        toast("לא ניתן ליצור קישור איפוס כרגע.");
+      }
+    }
+
+    async function resetPassword() {
+      try {
+        await apiRequest("/auth-reset-password", {
+          method: "POST",
+          body: {
+            token: document.getElementById("resetToken")?.value,
+            password: document.getElementById("resetPassword")?.value
+          }
+        });
+        toast("הסיסמה אופסה. אפשר להתחבר מחדש.");
+      } catch {
+        toast("איפוס סיסמה נכשל. ייתכן שהטוקן פג תוקף.");
+      }
+    }
+
+    function adminCards() {
+      return [
+        ...activeMonsterPool().map(card => ({ ...card, type: "monster" })),
+        ...activeSpellPool().map(card => ({ ...card, type: "spell" }))
+      ];
+    }
+
+    function renderAdminCardList() {
+      const list = document.getElementById("adminCardList");
+      if (!list) return;
+      const cards = adminCards();
+      if (!adminSelectedCardId && cards.length) adminSelectedCardId = cards[0].id;
+      list.innerHTML = cards.map(card => `
+        <button type="button" class="admin-card-item ${card.id === adminSelectedCardId ? "active" : ""}" data-card-id="${safeText(card.id)}">
+          ${safeText(card.name)} · ${safeText(card.type)} · ${safeText(card.id)}
+        </button>
+      `).join("");
+      const selected = cards.find(card => card.id === adminSelectedCardId);
+      const textarea = document.getElementById("adminCardJson");
+      if (textarea && selected) textarea.value = JSON.stringify(selected, null, 2);
+    }
+
+    function openAdminPanel() {
+      if (currentUser?.role !== "admin") return toast("נדרשת הרשאת אדמין.");
+      renderAdminCardList();
+      document.getElementById("adminOverlay")?.classList.remove("hidden");
+    }
+
+    function closeAdminPanel() {
+      document.getElementById("adminOverlay")?.classList.add("hidden");
+    }
+
+    function setAdminDraft(kind) {
+      const timestamp = Date.now().toString().slice(-6);
+      const draft = kind === "spell"
+        ? { type: "spell", id: `spell_${timestamp}`, name: "קסם חדש", cost: 1, target: "enemy", effect: "damage", amount: 1, desc: "תיאור אפקט", imageUrl: "", emoji: "🔮", accent: "#9d4edd" }
+        : { type: "monster", id: `monster_${timestamp}`, name: "מפלצת חדשה", cost: 1, race: "חדש", war: "חדש", attack: 1, defense: 1, hp: 3, speed: 50, abilities: [], imageUrl: "", emoji: "🦸", accent: "#118ab2" };
+      adminSelectedCardId = draft.id;
+      document.getElementById("adminCardJson").value = JSON.stringify(draft, null, 2);
+      renderAdminCardList();
+    }
+
+    async function saveAdminCard() {
+      try {
+        const card = JSON.parse(document.getElementById("adminCardJson")?.value || "{}");
+        const data = await apiRequest("/cards", { method: "POST", body: { card } });
+        remoteCardData = normalizeCardData(data.cards);
+        adminSelectedCardId = card.id;
+        localStorage.setItem(CARD_DATA_STORAGE_KEY, JSON.stringify(remoteCardData));
+        renderAdminCardList();
+        renderDeckBuilder();
+        init();
+        toast("הקלף נשמר ב־DB והמשחק עודכן.");
+      } catch (err) {
+        console.warn("admin card save failed", err);
+        toast("שמירת הקלף נכשלה. בדוק JSON והרשאת אדמין.");
+      }
+    }
+
+    function bindAccountAndAdmin() {
+      document.getElementById("accountBtn")?.addEventListener("click", openAccountPanel);
+      document.getElementById("drawerAccountBtn")?.addEventListener("click", () => { closeMobileDrawer(); openAccountPanel(); });
+      document.getElementById("closeAccountPanelBtn")?.addEventListener("click", closeAccountPanel);
+      document.getElementById("accountOverlay")?.addEventListener("click", ev => { if (ev.target.id === "accountOverlay") closeAccountPanel(); });
+      document.getElementById("loginBtn")?.addEventListener("click", loginAccount);
+      document.getElementById("registerBtn")?.addEventListener("click", registerAccount);
+      document.getElementById("logoutBtn")?.addEventListener("click", logoutAccount);
+      document.getElementById("drawerLogoutBtn")?.addEventListener("click", () => { closeMobileDrawer(); logoutAccount(); });
+      document.getElementById("requestResetBtn")?.addEventListener("click", requestPasswordReset);
+      document.getElementById("resetPasswordBtn")?.addEventListener("click", resetPassword);
+
+      document.getElementById("adminCardsBtn")?.addEventListener("click", openAdminPanel);
+      document.getElementById("drawerAdminCardsBtn")?.addEventListener("click", () => { closeMobileDrawer(); openAdminPanel(); });
+      document.getElementById("closeAdminPanelBtn")?.addEventListener("click", closeAdminPanel);
+      document.getElementById("adminOverlay")?.addEventListener("click", ev => { if (ev.target.id === "adminOverlay") closeAdminPanel(); });
+      document.getElementById("adminCardList")?.addEventListener("click", ev => {
+        const btn = ev.target.closest(".admin-card-item");
+        if (!btn) return;
+        adminSelectedCardId = btn.dataset.cardId;
+        renderAdminCardList();
+      });
+      document.getElementById("saveAdminCardBtn")?.addEventListener("click", saveAdminCard);
+      document.getElementById("newMonsterAdminBtn")?.addEventListener("click", () => setAdminDraft("monster"));
+      document.getElementById("newSpellAdminBtn")?.addEventListener("click", () => setAdminDraft("spell"));
+    }
+
 
     function openMobileDrawer() {
       const drawer = document.getElementById("mobileDrawer");
@@ -11230,6 +11711,18 @@
       clearEnemyMatchupSelection();
     });
 
+    async function bootstrapGame() {
+      bindAccountAndAdmin();
+      await loadRemoteCards();
+      await loadCurrentUser();
+      if (currentUser) await loadRemoteDeck();
+      init();
+
+      if (new URLSearchParams(location.search).has("resetToken")) {
+        openAccountPanel();
+      }
+    }
+
     document.getElementById("battleBtn").onclick = startBattle;
     document.getElementById("mobileBattleBtn").onclick = startBattle;
     document.getElementById("restartBtn").onclick = init;
@@ -11254,7 +11747,7 @@
       if (e.target.id === "mobileDrawer") closeMobileDrawer();
     };
     /* bindEnemyTapSelection removed — inline handlers in renderSlots() handle enemy taps */
-    init();
+    bootstrapGame();
   
     // v32 layout editor robust bootstrap
     (function bootstrapLayoutEditorButton(){
