@@ -4957,9 +4957,11 @@
   
     /* v57: dedicated fullscreen game mode */
     body.fullscreen-mode {
-      --fs-card-scale: 1.18;
-      --fs-slot-min-h: 282px;
-      --fs-hand-h: 326px;
+      --fs-card-scale: 1;
+      --fs-card-hover-scale: 1;
+      --fs-slot-min-h: 260px;
+      --fs-hand-h: 294px;
+      --fs-slot-card-y: 0px;
       --fs-ui-scale: 1.06;
       overflow: hidden !important;
       background-size: cover !important;
@@ -5032,14 +5034,13 @@
 
     body.fullscreen-mode .slot .card.monster-framed,
     body.fullscreen-mode .slot .card.spell-framed {
-      transform: scale(var(--fs-card-scale));
-      transform-origin: center center;
+      transform: none;
       z-index: 4;
     }
 
     body.fullscreen-mode .slot .card.monster-framed:hover,
     body.fullscreen-mode .slot .card.spell-framed:hover {
-      transform: scale(calc(var(--fs-card-scale) + .03));
+      transform: none;
     }
 
     body.fullscreen-mode .hand-panel {
@@ -5229,9 +5230,9 @@
   
     /* v59: fullscreen scale-safe animations and arena alignment fixes */
     body.fullscreen-mode {
-      --fs-card-scale: 1.18;
-      --fs-card-hover-scale: 1.21;
-      --fs-slot-card-y: -10px;
+      --fs-card-scale: 1;
+      --fs-card-hover-scale: 1;
+      --fs-slot-card-y: 0px;
       --fs-hand-card-gap: 34px;
     }
 
@@ -5256,14 +5257,13 @@
 
     body.fullscreen-mode .slot .card.monster-framed,
     body.fullscreen-mode .slot .card.spell-framed {
-      transform: translateY(var(--fs-slot-card-y)) scale(var(--fs-card-scale)) !important;
-      transform-origin: center center !important;
+      transform: none !important;
       z-index: 4;
     }
 
     body.fullscreen-mode .slot .card.monster-framed:hover,
     body.fullscreen-mode .slot .card.spell-framed:hover {
-      transform: translateY(var(--fs-slot-card-y)) scale(var(--fs-card-hover-scale)) !important;
+      transform: none !important;
     }
 
     body.fullscreen-mode .hand {
@@ -5364,18 +5364,18 @@
 
     @media (min-width: 1700px) {
       body.fullscreen-mode {
-        --fs-card-scale: 1.26;
-        --fs-card-hover-scale: 1.30;
-        --fs-slot-card-y: -12px;
+        --fs-card-scale: 1;
+        --fs-card-hover-scale: 1;
+        --fs-slot-card-y: 0px;
         --fs-hand-card-gap: 42px;
       }
     }
 
     @media (max-width: 1280px) {
       body.fullscreen-mode {
-        --fs-card-scale: 1.10;
-        --fs-card-hover-scale: 1.13;
-        --fs-slot-card-y: -7px;
+        --fs-card-scale: 1;
+        --fs-card-hover-scale: 1;
+        --fs-slot-card-y: 0px;
         --fs-hand-card-gap: 24px;
       }
     }
@@ -5535,7 +5535,7 @@
     /* v64-fix: fullscreen hand cards use same size & scale as arena cards.
        Both arena and hand cards share the base 168×236 dimensions scaled by --fs-card-scale. */
     body.fullscreen-mode {
-      --fs-hand-h: calc(236px * var(--fs-card-scale) + 58px);
+      --fs-hand-h: 294px;
     }
 
     body.fullscreen-mode .hand-panel {
@@ -5558,7 +5558,7 @@
       overflow-y: hidden !important;
     }
 
-    /* Hand cards: same base size as arena cards (168×236), same scale factor */
+    /* Hand cards: same natural size as arena cards (168×236), no scaling */
     body.fullscreen-mode .hand .card.monster-framed,
     body.fullscreen-mode .hand .card.spell-framed {
       width: 168px !important;
@@ -5567,21 +5567,20 @@
       min-height: 236px !important;
       max-width: 168px !important;
       max-height: 236px !important;
-      flex: 0 0 calc(168px * var(--fs-card-scale)) !important;
-      transform: scale(var(--fs-card-scale)) !important;
-      transform-origin: center center !important;
+      flex: 0 0 168px !important;
+      transform: none !important;
       margin: 0 !important;
       align-self: center !important;
     }
 
     body.fullscreen-mode .hand .card.monster-framed:hover,
     body.fullscreen-mode .hand .card.spell-framed:hover {
-      transform: translateY(-4px) scale(var(--fs-card-hover-scale)) !important;
+      transform: translateY(-4px) !important;
     }
 
-    /* Arena slot sizing: ensure slots properly contain scaled cards */
+    /* Arena slot sizing: fixed height for non-scaled 168×236 cards */
     body.fullscreen-mode .slot {
-      min-height: calc(236px * var(--fs-card-scale) + 24px) !important;
+      min-height: 260px !important;
     }
 
     @media (min-width: 1700px) {
@@ -6391,6 +6390,56 @@
         width: 24px !important;
         height: 24px !important;
       }
+    }
+
+    /* Phase banner announcement animations */
+    .phase-banner {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      pointer-events: none;
+      animation: phaseBannerAnim 1.6s ease forwards;
+    }
+
+    .phase-banner-text {
+      font-size: clamp(24px, 6vw, 42px);
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #fff;
+      text-shadow: 0 0 30px rgba(255,209,102,.7), 0 4px 12px rgba(0,0,0,.6);
+      padding: 18px 48px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(20,22,34,.92), rgba(40,44,68,.88));
+      border: 2px solid rgba(255,209,102,.5);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    }
+
+    .phase-banner-text.player-turn {
+      border-color: rgba(6,214,160,.6);
+      text-shadow: 0 0 30px rgba(6,214,160,.7), 0 4px 12px rgba(0,0,0,.6);
+    }
+
+    .phase-banner-text.enemy-turn {
+      border-color: rgba(239,71,111,.6);
+      text-shadow: 0 0 30px rgba(239,71,111,.7), 0 4px 12px rgba(0,0,0,.6);
+    }
+
+    .phase-banner-text.battle {
+      border-color: rgba(255,209,102,.7);
+      text-shadow: 0 0 30px rgba(255,209,102,.9), 0 4px 12px rgba(0,0,0,.6);
+      font-size: clamp(28px, 7vw, 48px);
+    }
+
+    @keyframes phaseBannerAnim {
+      0% { opacity: 0; transform: scale(0.7); }
+      15% { opacity: 1; transform: scale(1.05); }
+      25% { transform: scale(1); }
+      70% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.9); }
     }
 
   </style>
@@ -9788,6 +9837,201 @@
         `חיים נוכחיים: ${card.currentHp}`,
         card.currentHp < card.hp ? `חיים בסיסיים: ${card.hp}` : null,
         effectiveCombatSpeed(card) !== card.speed ? `מהירות בפועל: ${effectiveCombatSpeed(card)}` : null,
+          draw(who, 1);
+          continue;
+        }
+        const card = who.deck.splice(index, 1)[0];
+        card.owner = who.name;
+        who.hand.push(card);
+      }
+    }
+
+    function drawOpeningHand(who) {
+      drawType(who, "monster", 3);
+      drawType(who, "spell", 2);
+      who.hand = shuffle(who.hand);
+    }
+
+    function matchupDelta(attacker, defender) {
+      const attackerInfo = ADVANTAGE[attacker.war] || { strong: [], weak: [] };
+      const defenderInfo = ADVANTAGE[defender.war] || { strong: [], weak: [] };
+
+      // יתרון/חיסרון חייב להיות הדדי:
+      // אם התוקף חזק מול המגן או שהמגן חלש מול התוקף => x2.
+      // אם התוקף חלש מול המגן או שהמגן חזק מול התוקף => חצי התקפה.
+      if (attackerInfo.strong.includes(defender.war) || defenderInfo.weak.includes(attacker.war)) return 1;
+      if (attackerInfo.weak.includes(defender.war) || defenderInfo.strong.includes(attacker.war)) return -1;
+      return 0;
+    }
+
+    function matchupText(delta) {
+      if (delta > 0) return "יתרון סוג לוחמה: ההתקפה הוכפלה";
+      if (delta < 0) return "חיסרון סוג לוחמה: ההתקפה נחצתה";
+      return "ללא יתרון סוג";
+    }
+
+    function matchupClassForPlayerCard(card) {
+      if (state.hoveredEnemySlot === null) return { cls: "", badge: "" };
+      const enemyCard = state.enemy.board[state.hoveredEnemySlot];
+      if (!enemyCard || !card || card.type === "spell") return { cls: "", badge: "" };
+      const delta = matchupDelta(card, enemyCard);
+      if (delta > 0) return { cls: "effective", badge: `<div class="match-badge good" title="יעיל נגד הקלף הזה">▲<span class="tiny">x2</span></div>` };
+      if (delta < 0) return { cls: "weak", badge: `<div class="match-badge bad" title="חלש נגד הקלף הזה">▼<span class="tiny">½</span></div>` };
+      return { cls: "neutral", badge: `<div class="match-badge mid" title="רגיל נגד הקלף הזה">◆<span class="tiny">0</span></div>` };
+    }
+
+    function escapeAttr(text) {
+      return String(text ?? "").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[ch]));
+    }
+
+
+    function safeCardImageUrl(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (/^file:/i.test(value)) return "";
+      if (/^[a-zA-Z]:[\\/]/.test(value)) return "";
+      if (/^\/(?!\/)/.test(value)) return "";
+      if (/^(data:image\/|https?:\/\/|blob:)/i.test(value)) return value;
+      if (/^\.?\/?assets\/cards\/[^<>:"|?*]+\.(png|jpg|jpeg|webp|gif|svg)$/i.test(value)) return value.startsWith("./") ? value : "./" + value.replace(/^\//, "");
+      if (/^\.?\/?assets\/[^<>:"|?*]+\.(png|jpg|jpeg|webp|gif|svg)$/i.test(value)) return value.startsWith("./") ? value : "./" + value.replace(/^\//, "");
+      return "";
+    }
+
+    function cardArtHtml(card) {
+      const imageUrl = safeCardImageUrl(card.imageUrl);
+      const emoji = String(card.emoji || "❔").replace(/"/g, "&quot;");
+      if (imageUrl) {
+        return `<span class="fallback-emoji">${card.emoji || "❔"}</span><img src="${imageUrl}" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.remove()">`;
+      }
+      return card.emoji || "❔";
+    }
+
+
+    function opposingCardFor(card) {
+      if (!card || card.type !== "monster" || !state.player || !state.enemy) return null;
+
+      let idx = state.player.board.findIndex(c => c && c.uid === card.uid);
+      if (idx !== -1) return state.enemy.board[idx];
+
+      idx = state.enemy.board.findIndex(c => c && c.uid === card.uid);
+      if (idx !== -1) return state.player.board[idx];
+
+      return null;
+    }
+
+    function effectiveAttackInfo(card) {
+      const opposite = opposingCardFor(card);
+      if (!card || card.type !== "monster" || !opposite) {
+        return { attack: card?.attack, delta: 0, label: "", noteClass: "" };
+      }
+
+      const delta = matchupDelta(card, opposite);
+      if (delta > 0) {
+        return { attack: card.attack * 2, delta, label: "x2", noteClass: "advantage" };
+      }
+      if (delta < 0) {
+        return { attack: Math.max(1, Math.ceil(card.attack / 2)), delta, label: "½", noteClass: "disadvantage" };
+      }
+      return { attack: card.attack, delta: 0, label: "", noteClass: "" };
+    }
+
+    function attackStatHtml(card) {
+      const info = effectiveAttackInfo(card);
+      if (!info.delta) {
+        return `<div class="num" title="התקפה">⚔️<strong>${card.attack}</strong></div>`;
+      }
+
+      return `<div class="num modified-stat" title="התקפה מעודכנת לפי יתרון/חיסרון סוג">⚔️<strong>${info.attack}</strong><span class="stat-original">${card.attack}</span></div>`;
+    }
+
+    function typeEffectNoteHtml(card) {
+      const info = effectiveAttackInfo(card);
+      if (!info.delta) return "";
+      return `<div class="type-effect-note ${info.noteClass}">${info.label}</div>`;
+    }
+
+
+    function abilityDef(id) {
+      return ABILITIES.find(a => a.id === id) || { id, name: id, short: id, icon: "•", desc: "" };
+    }
+
+    function cardAbilities(card) {
+      return Array.isArray(card?.abilities) ? card.abilities.slice(0, 2) : [];
+    }
+
+    function hasAbility(card, id) {
+      return cardAbilities(card).includes(id);
+    }
+
+    function abilityBadgesHtml(card) {
+      const abilities = cardAbilities(card);
+      if (!abilities.length) return "";
+      return `<div class="ability-badges">${abilities.map(id => {
+        const a = abilityDef(id);
+        return `<span class="ability-badge" title="${a.name}: ${a.desc}"><span class="ability-icon">${a.icon}</span>${a.short}</span>`;
+      }).join("")}</div>`;
+    }
+
+    function healMonster(card, amount) {
+      if (!card || card.currentHp >= card.hp) return 0;
+      const before = card.currentHp;
+      card.currentHp = Math.min(card.hp, card.currentHp + amount);
+      return card.currentHp - before;
+    }
+
+    function isOnlyMonsterOnItsSide(card) {
+      if (!card || !state.player || !state.enemy) return false;
+      let board = null;
+      if (state.player.board.some(c => c && c.uid === card.uid)) board = state.player.board;
+      if (state.enemy.board.some(c => c && c.uid === card.uid)) board = state.enemy.board;
+      if (!board) return false;
+      return board.filter(Boolean).length === 1;
+    }
+
+    function effectiveCombatSpeed(card) {
+      const bonus = hasAbility(card, "haste") && isOnlyMonsterOnItsSide(card) ? 20 : 0;
+      return Math.min(100, card.speed + bonus);
+    }
+
+
+    function findCardByUid(uid) {
+      const groups = [
+        state?.player?.hand || [],
+        state?.player?.board || [],
+        state?.player?.grave || [],
+        state?.enemy?.hand || [],
+        state?.enemy?.board || [],
+        state?.enemy?.grave || []
+      ];
+      for (const group of groups) {
+        const found = group.find(card => card && card.uid === uid);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function safeText(text) {
+      return escapeAttr(String(text ?? ""));
+    }
+
+    function listOrDash(items) {
+      return Array.isArray(items) && items.length ? items.map(safeText).join("، ") : "אין";
+    }
+
+    function monsterInfoHtml(card) {
+      const abilities = cardAbilities(card);
+      const advantage = ADVANTAGE[card.war] || { strong: [], weak: [] };
+      const currentState = [
+        card.poisoned ? "☠ מורעל" : null,
+        `חיים נוכחיים: ${card.currentHp}`,
+        card.currentHp < card.hp ? `חיים בסיסיים: ${card.hp}` : null,
+        effectiveCombatSpeed(card) !== card.speed ? `מהירות בפועל: ${effectiveCombatSpeed(card)}` : null,
         effectiveAttackInfo(card).attack !== card.attack ? `התקפה בפועל: ${effectiveAttackInfo(card).attack}` : null
       ].filter(Boolean).join(" · ");
 
@@ -9899,7 +10143,7 @@
             <span class="frame-chip race-chip layout-edit-target layout-edit-target-box" data-layout-target="race" data-layout-box-target="raceBoxW">${card.race}</span>
             <span class="frame-chip war-chip layout-edit-target layout-edit-target-box" data-layout-target="war" data-layout-box-target="warBoxW">${card.war}</span>
           </div>
-          <div class="frame-abilities layout-edit-target layout-edit-target-box card-info-trigger" data-layout-target="abilities" data-layout-box-target="abilitiesBoxW" title="לחץ לפתיחת מידע על הקלף" onclick="showCardInfoByUid(\'${card.uid}\'); event.stopPropagation();">${abilityBadgesFrameHtml(card)}</div>
+          <div class="frame-abilities layout-edit-target layout-edit-target-box card-info-trigger" data-layout-target="abilities" data-layout-box-target="abilitiesBoxW" title="לחץ לפתיחת מידע על הקלף" onclick="showCardInfoByUid('${card.uid}'); event.stopPropagation();">${abilityBadgesFrameHtml(card)}</div>
           <div class="frame-stat speed layout-edit-target layout-edit-target-box" data-layout-target="speed" data-layout-box-target="speedBoxW" title="מהירות">${effectiveCombatSpeed(card)}</div>
           <div class="frame-stat hp ${(String(card.currentHp).length) >= 2 ? "long-hp" : ""} layout-edit-target layout-edit-target-box" data-layout-target="hp" data-layout-box-target="hpBoxW" title="חיים">${card.currentHp}</div>
           <div class="frame-stat defense layout-edit-target layout-edit-target-box" data-layout-target="defense" data-layout-box-target="defenseBoxW" title="הגנה">${card.defense}</div>
@@ -10010,6 +10254,15 @@
               ev.stopPropagation();
               return;
             }
+            
+            if (ev.target.closest?.(".card-info-trigger, .frame-info-btn")) {
+              enemyTapHandledAt = now;
+              ev.preventDefault();
+              ev.stopPropagation();
+              showCardInfoByUid(card.uid);
+              return;
+            }
+
             enemyTapHandledAt = now;
             ev.preventDefault();
             ev.stopPropagation();
@@ -10654,6 +10907,7 @@
       state.selectedPlayerSlot = null;
       state.hoveredEnemySlot = null;
       render();
+      showPhaseBanner("⚔ קרב! ⚔", "battle");
       log(`— ${endingSide === "player" ? "התור שלך הסתיים" : "תור המחשב הסתיים"}: הקרב התחיל —`);
 
       if (state.turn === 1) {
@@ -10663,21 +10917,6 @@
         await finishCurrentTurnAfterBattle(endingSide);
         return;
       }
-
-
-      await applyStartOfCombatAbilities();
-      showTypeEffectPreview();
-
-      await sleep(680);
-
-      const attackers = [];
-      state.player.board.forEach((card, slot) => card && attackers.push({ side: "player", card, slot, roll: Math.random() }));
-      state.enemy.board.forEach((card, slot) => card && attackers.push({ side: "enemy", card, slot, roll: Math.random() }));
-      attackers.sort((a,b) => effectiveCombatSpeed(b.card) - effectiveCombatSpeed(a.card) || b.roll - a.roll);
-
-      for (const item of attackers) {
-        if (state.gameOver) break;
-        const owner = item.side === "player" ? state.player : state.enemy;
         const foe = item.side === "player" ? state.enemy : state.player;
         if (owner.board[item.slot]?.uid !== item.card.uid) continue;
         await attack(item.side, item.card, item.slot, foe);
