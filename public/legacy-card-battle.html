@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>קרבות קלפים - אבטיפוס</title>
+  <link rel="icon" href='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" rx="14" fill="%2311121a"/%3E%3Cpath d="M32 8 50 20v22L32 56 14 42V20z" fill="%23ffd166"/%3E%3Cpath d="M32 14 44 22v16L32 48 20 38V22z" fill="%23118ab2"/%3E%3C/svg%3E' />
   <style>
     :root {
       --bg: #11121a;
@@ -10903,8 +10904,35 @@
         await finishCurrentTurnAfterBattle(endingSide);
         return;
       }
+
+      showTypeEffectPreview();
+      await sleep(420);
+      await applyStartOfCombatAbilities();
+
+      const attackers = [];
+      [
+        { who: state.player, side: "player" },
+        { who: state.enemy, side: "enemy" }
+      ].forEach(({ who, side }) => {
+        who.board.forEach((card, slot) => {
+          if (!card || card.currentHp <= 0) return;
+          attackers.push({ card, slot, side, speed: effectiveCombatSpeed(card) });
+        });
+      });
+
+      attackers.sort((a, b) => {
+        const speedDelta = b.speed - a.speed;
+        if (speedDelta) return speedDelta;
+        if (a.side !== b.side) return a.side === endingSide ? -1 : 1;
+        return a.slot - b.slot;
+      });
+
+      for (const item of attackers) {
+        if (state.gameOver) break;
+        const owner = item.side === "player" ? state.player : state.enemy;
         const foe = item.side === "player" ? state.enemy : state.player;
         if (owner.board[item.slot]?.uid !== item.card.uid) continue;
+        if (item.card.currentHp <= 0) continue;
         await attack(item.side, item.card, item.slot, foe);
         cleanupDead();
         render();
