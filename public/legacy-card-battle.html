@@ -10010,6 +10010,16 @@
               ev.stopPropagation();
               return;
             }
+            
+            // Fix: allow tapping info triggers on enemy cards without triggering matchup
+            if (ev.target.closest?.(".card-info-trigger, .frame-info-btn")) {
+              enemyTapHandledAt = now;
+              ev.preventDefault();
+              ev.stopPropagation();
+              showCardInfoByUid(card.uid);
+              return;
+            }
+
             enemyTapHandledAt = now;
             ev.preventDefault();
             ev.stopPropagation();
@@ -10654,6 +10664,7 @@
       state.selectedPlayerSlot = null;
       state.hoveredEnemySlot = null;
       render();
+      showPhaseBanner("⚔ קרב! ⚔", "battle");
       log(`— ${endingSide === "player" ? "התור שלך הסתיים" : "תור המחשב הסתיים"}: הקרב התחיל —`);
 
       if (state.turn === 1) {
@@ -10817,6 +10828,7 @@
           who.energy += turnIncome + bonus;
           who.nextBonus = 0;
           draw(who, 1);
+          showPhaseBanner(side === "player" ? "התור שלך" : "תור המחשב", side === "player" ? "player-turn" : "enemy-turn");
           log(`${who.name} התחיל/ה תור: קיבל/ה ${turnIncome}${bonus ? " + " + bonus : ""} אנ״ח ושלף/ה קלף.`);
           render();
         }
@@ -10891,6 +10903,17 @@
       t.style.display = "block";
       clearTimeout(toast.timer);
       toast.timer = setTimeout(() => t.style.display = "none", 2400);
+    }
+
+    function showPhaseBanner(text, typeClass) {
+      if (document.hidden || !document.body.classList.contains("fullscreen-mode")) return; // Only show in fullscreen
+      const banner = document.createElement("div");
+      banner.className = "phase-banner";
+      banner.innerHTML = `<div class="phase-banner-text ${typeClass}">${text}</div>`;
+      document.body.appendChild(banner);
+      setTimeout(() => {
+        if (banner.parentNode) banner.remove();
+      }, 1800);
     }
 
 
