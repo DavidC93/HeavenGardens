@@ -9829,22 +9829,7 @@
       return Array.isArray(items) && items.length ? items.map(safeText).join("، ") : "אין";
     }
 
-    function monsterInfoHtml(card) {
-      const abilities = cardAbilities(card);
-      const advantage = ADVANTAGE[card.war] || { strong: [], weak: [] };
-      const currentState = [
-        card.poisoned ? "☠ מורעל" : null,
-        `חיים נוכחיים: ${card.currentHp}`,
-        card.currentHp < card.hp ? `חיים בסיסיים: ${card.hp}` : null,
-        effectiveCombatSpeed(card) !== card.speed ? `מהירות בפועל: ${effectiveCombatSpeed(card)}` : null,
-          draw(who, 1);
-          continue;
-        }
-        const card = who.deck.splice(index, 1)[0];
-        card.owner = who.name;
-        who.hand.push(card);
-      }
-    }
+
 
     function drawOpeningHand(who) {
       drawType(who, "monster", 3);
