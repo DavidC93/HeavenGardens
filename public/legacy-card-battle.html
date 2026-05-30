@@ -8665,12 +8665,21 @@
         const data = await apiRequest("/cards");
         if (Array.isArray(data.monsterCards) && Array.isArray(data.spellCards) && (data.monsterCards.length || data.spellCards.length)) {
           remoteCardData = normalizeCardData(data);
+          localStorage.setItem(CARD_DATA_STORAGE_KEY, JSON.stringify(remoteCardData));
           return true;
         }
       } catch (err) {
         console.warn("remote card catalog unavailable; using local cards", err);
       }
       return false;
+    }
+
+    async function restartGameWithFreshCards(showMessage = false) {
+      const loaded = await loadRemoteCards();
+      init();
+      if (showMessage) {
+        toast(loaded ? "הקלפים רועננו מה־DB והתחיל משחק חדש." : "לא הצלחתי לרענן מה־DB, התחיל משחק עם הקטלוג המקומי.");
+      }
     }
 
     async function loadCurrentUser() {
@@ -11742,7 +11751,7 @@
     function resetImportedCards() {
       localStorage.removeItem(CARD_DATA_STORAGE_KEY);
       toast("מאגר הקלפים אופס לברירת המחדל. מתחיל משחק חדש.");
-      init();
+      restartGameWithFreshCards();
     }
 
     function renderAccountUi() {
@@ -11906,7 +11915,7 @@
         localStorage.setItem(CARD_DATA_STORAGE_KEY, JSON.stringify(remoteCardData));
         renderAdminCardList();
         renderDeckBuilder();
-        init();
+        await restartGameWithFreshCards();
         toast("הקלף נשמר ב־DB והמשחק עודכן.");
       } catch (err) {
         console.warn("admin card save failed", err);
@@ -11996,8 +12005,8 @@
 
     document.getElementById("battleBtn").onclick = startBattle;
     document.getElementById("mobileBattleBtn").onclick = startBattle;
-    document.getElementById("restartBtn").onclick = init;
-    document.getElementById("drawerRestartBtn").onclick = () => { closeMobileDrawer(); init(); };
+    document.getElementById("restartBtn").onclick = () => restartGameWithFreshCards(true);
+    document.getElementById("drawerRestartBtn").onclick = () => { closeMobileDrawer(); restartGameWithFreshCards(true); };
     document.getElementById("drawerDeckBuilderBtn").onclick = () => { closeMobileDrawer(); openDeckBuilder(); };
     document.getElementById("drawerCheatsToggle").onclick = (ev) => { closeMobileDrawer(); toggleCheatsPanel(); ev.stopPropagation(); };
     document.getElementById("drawerLayoutEditToggle").onclick = (ev) => { closeMobileDrawer(); toggleLayoutEditor(); ev.stopPropagation(); };
@@ -12007,7 +12016,7 @@
       if (ev.target.id === "infoModal") closeInfoModal();
     };
 
-    document.getElementById("modalRestart").onclick = init;
+    document.getElementById("modalRestart").onclick = () => restartGameWithFreshCards(true);
     document.getElementById("gameImportFile").onchange = e => importGameJsonFile(e.target.files[0]);
     document.getElementById("drawerImportFile").onchange = e => { closeMobileDrawer(); importGameJsonFile(e.target.files[0]); };
     document.getElementById("resetCardsBtn").onclick = resetImportedCards;
