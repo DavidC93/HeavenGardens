@@ -9434,8 +9434,8 @@
     }
 
     function getAllCheatCards() {
-      const monsters = (typeof CARD_POOL !== "undefined" ? CARD_POOL : []).map(c => ({ ...c, type: "monster" }));
-      const spells = (typeof SPELL_POOL !== "undefined" ? SPELL_POOL : []).map(c => ({ ...c, type: "spell" }));
+      const monsters = activeMonsterPool().map(c => ({ ...c, type: "monster" }));
+      const spells = activeSpellPool().map(c => ({ ...c, type: "spell" }));
       return [...monsters, ...spells];
     }
 
@@ -9455,7 +9455,7 @@
       const select = document.getElementById("cheatCardSelect");
       if (!select || !select.value) return null;
       const [type, id] = select.value.split(":");
-      const pool = type === "spell" ? SPELL_POOL : CARD_POOL;
+      const pool = type === "spell" ? activeSpellPool() : activeMonsterPool();
       const template = pool.find(card => card.id === id);
       return template ? { ...template, type } : null;
     }
@@ -9641,7 +9641,7 @@
     }
 
     function deckCardThumbHtml(card) {
-      const url = safeCardImageUrl(card.imageUrl);
+      const url = cardImageSrc(card);
       if (url) return `<img src="${url}" alt="" onerror="this.replaceWith(document.createTextNode('${card.emoji || "🃏"}'))">`;
       return card.emoji || "🃏";
     }
@@ -10270,8 +10270,16 @@
       return "";
     }
 
+    function cardImageSrc(card) {
+      const url = safeCardImageUrl(card?.imageUrl);
+      if (!url) return "";
+      const version = encodeURIComponent(String(card?.version || card?.updatedAt || ""));
+      if (!version || /^(data:image\/|blob:)/i.test(url)) return url;
+      return `${url}${url.includes("?") ? "&" : "?"}v=${version}`;
+    }
+
     function cardArtHtml(card) {
-      const imageUrl = safeCardImageUrl(card.imageUrl);
+      const imageUrl = cardImageSrc(card);
       const emoji = String(card.emoji || "❔").replace(/"/g, "&quot;");
       if (imageUrl) {
         return `<span class="fallback-emoji">${card.emoji || "❔"}</span><img src="${imageUrl}" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.remove()">`;
@@ -10451,7 +10459,7 @@
     }
 
     function cardArtHtml(card) {
-      const imageUrl = safeCardImageUrl(card.imageUrl);
+      const imageUrl = cardImageSrc(card);
       const emoji = String(card.emoji || "❔").replace(/"/g, "&quot;");
       if (imageUrl) {
         return `<span class="fallback-emoji">${card.emoji || "❔"}</span><img src="${imageUrl}" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.remove()">`;

@@ -22,7 +22,9 @@ function rowToCard(row) {
     effect: row.effect || undefined,
     amount: row.amount ?? undefined,
     desc: row.description || row.payload?.desc || "",
-    abilities: Array.isArray(row.abilities) ? row.abilities : []
+    abilities: Array.isArray(row.abilities) ? row.abilities : [],
+    version: row.version,
+    updatedAt: row.updated_at
   };
 }
 
@@ -116,4 +118,3 @@ export async function handler(event) {
     return handleError(error);
   }
 }
-
