@@ -6548,6 +6548,14 @@
       box-shadow: 0 12px 40px rgba(0,0,0,.5);
     }
 
+    .phase-banner-subtitle {
+      margin-top: 6px;
+      font-size: .42em;
+      line-height: 1.25;
+      color: rgba(255,247,226,.82);
+      font-weight: 850;
+    }
+
     .phase-banner-text.player-turn {
       border-color: rgba(6,214,160,.6);
       text-shadow: 0 0 30px rgba(6,214,160,.7), 0 4px 12px rgba(0,0,0,.6);
@@ -6570,6 +6578,262 @@
       25% { transform: scale(1); }
       70% { opacity: 1; transform: scale(1); }
       100% { opacity: 0; transform: scale(0.9); }
+    }
+
+    /* Final mobile deck-builder pass: overrides older layered deck CSS. */
+    @media (max-width: 720px) {
+      .deck-builder-overlay {
+        align-items: stretch !important;
+        justify-items: stretch !important;
+        padding: 0 !important;
+        background: rgba(2, 3, 8, .9) !important;
+      }
+
+      .deck-builder-panel {
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        border: 0 !important;
+        padding: calc(10px + env(safe-area-inset-top, 0px)) 10px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+        grid-template-rows: auto auto auto auto minmax(0, 1fr) !important;
+        gap: 8px !important;
+        overflow: hidden !important;
+      }
+
+      .deck-builder-head {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 5 !important;
+        gap: 8px !important;
+        padding-bottom: 8px !important;
+        background: linear-gradient(180deg, rgba(22,18,27,.98), rgba(22,18,27,.82)) !important;
+      }
+
+      .deck-builder-head h2 {
+        font-size: 20px !important;
+        line-height: 1.05 !important;
+      }
+
+      .deck-builder-head p {
+        display: none !important;
+      }
+
+      #closeDeckBuilderBtn {
+        min-width: 44px !important;
+        height: 38px !important;
+        padding: 0 12px !important;
+        border-radius: 12px !important;
+      }
+
+      .deck-builder-summary {
+        grid-template-columns: 54px minmax(0, 1fr) !important;
+        grid-template-areas:
+          "count rule"
+          "actions actions" !important;
+        gap: 7px !important;
+        padding: 8px !important;
+        border-radius: 14px !important;
+      }
+
+      .deck-count-badge {
+        grid-area: count !important;
+        width: 54px !important;
+        height: 48px !important;
+        border-radius: 14px !important;
+      }
+
+      .deck-count-badge span {
+        display: none !important;
+      }
+
+      .deck-count-badge b {
+        font-size: 24px !important;
+      }
+
+      .deck-rule {
+        grid-area: rule !important;
+        font-size: 12px !important;
+        line-height: 1.25 !important;
+      }
+
+      .deck-builder-actions {
+        grid-area: actions !important;
+        display: grid !important;
+        grid-template-columns: 1.25fr .8fr 1fr !important;
+        gap: 6px !important;
+      }
+
+      .deck-builder-actions button {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 38px !important;
+        padding: 0 8px !important;
+        border-radius: 12px !important;
+        font-size: 12px !important;
+      }
+
+      .deck-builder-tabs {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+      }
+
+      .deck-builder-tabs button {
+        min-width: 0 !important;
+        height: 36px !important;
+        padding: 0 6px !important;
+        border-radius: 12px !important;
+        font-size: 12px !important;
+      }
+
+      .deck-builder-filters {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        padding: 8px !important;
+        border-radius: 14px !important;
+      }
+
+      .deck-builder-filters input,
+      .deck-builder-filters select,
+      .deck-builder-filters button {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 8px !important;
+        border-radius: 10px !important;
+        font-size: 12px !important;
+      }
+
+      #deckFilterSearch,
+      #deckFilterReset {
+        grid-column: 1 / -1 !important;
+      }
+
+      .deck-builder-list {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        padding: 2px 2px 96px !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      .deck-card-row {
+        grid-template-columns: 58px minmax(0, 1fr) 82px !important;
+        grid-template-areas: "thumb meta controls" !important;
+        min-height: 112px !important;
+        gap: 8px !important;
+        padding: 8px !important;
+        border-radius: 14px !important;
+        align-items: center !important;
+        direction: rtl !important;
+      }
+
+      .deck-card-thumb {
+        grid-area: thumb !important;
+        width: 58px !important;
+        height: 76px !important;
+        border-radius: 12px !important;
+        justify-self: center !important;
+      }
+
+      .deck-card-meta {
+        grid-area: meta !important;
+        grid-template-columns: minmax(0, 1fr) 32px !important;
+        grid-template-areas:
+          "name cost"
+          "sub cost"
+          "stats stats"
+          "effect effect" !important;
+        gap: 4px 6px !important;
+        min-width: 0 !important;
+      }
+
+      .deck-card-name {
+        font-size: 13px !important;
+        line-height: 1.12 !important;
+      }
+
+      .deck-card-sub {
+        font-size: 10px !important;
+        line-height: 1.15 !important;
+      }
+
+      .deck-card-cost-badge {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 14px !important;
+      }
+
+      .deck-card-stats {
+        gap: 3px !important;
+        margin: 2px 0 !important;
+      }
+
+      .deck-card-stats span {
+        min-width: 27px !important;
+        padding: 3px 4px !important;
+        border-radius: 8px !important;
+        font-size: 10px !important;
+      }
+
+      .deck-card-effect {
+        max-height: 34px !important;
+        min-height: 24px !important;
+        overflow: hidden !important;
+        padding: 4px 6px !important;
+        border-radius: 9px !important;
+        font-size: 10px !important;
+        line-height: 1.25 !important;
+      }
+
+      .deck-card-abilities {
+        gap: 3px !important;
+      }
+
+      .deck-ability-chip {
+        padding: 4px 6px !important;
+        font-size: 10px !important;
+      }
+
+      .deck-card-controls {
+        grid-area: controls !important;
+        width: 82px !important;
+        display: grid !important;
+        grid-template-columns: 28px 22px 28px !important;
+        gap: 3px !important;
+        direction: ltr !important;
+      }
+
+      .deck-card-controls button {
+        width: 28px !important;
+        height: 36px !important;
+        border-radius: 10px !important;
+        font-size: 18px !important;
+      }
+
+      .deck-card-qty {
+        width: 22px !important;
+        font-size: 18px !important;
+        align-self: center !important;
+      }
+
+      .deck-ability-popup {
+        position: fixed !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+        width: auto !important;
+        z-index: 1300 !important;
+      }
+
+      .phase-banner-text {
+        width: min(330px, calc(100vw - 36px)) !important;
+        padding: 14px 18px !important;
+        font-size: 25px !important;
+        text-align: center !important;
+        border-radius: 16px !important;
+      }
     }
 
   </style>
@@ -9912,6 +10176,9 @@
       log(`המשחק התחיל. כל שחקן מתחיל עם 5 אנ״ח ו־5 קלפים ביד. בהמשך התוספת לתור עולה מ־6 עד 10. ${state.currentTurn === "player" ? "אתה מתחיל." : "המחשב מתחיל."}`);
       state.actionCounts[state.currentTurn] = 1;
       render();
+      showPhaseBanner(state.currentTurn === "player" ? "התור שלך" : "תור המחשב", state.currentTurn === "player" ? "player-turn" : "enemy-turn", {
+        subtitle: "המשחק התחיל"
+      });
       if (state.currentTurn === "enemy") setTimeout(runEnemyTurn, 700);
     }
 
@@ -11179,7 +11446,7 @@
       state.selectedPlayerSlot = null;
       state.hoveredEnemySlot = null;
       render();
-      showPhaseBanner("⚔ קרב! ⚔", "battle");
+      showPhaseBanner("מצב קרב", "battle", { subtitle: "המפלצות תוקפות לפי מהירות" });
       log(`— ${endingSide === "player" ? "התור שלך הסתיים" : "תור המחשב הסתיים"}: הקרב התחיל —`);
 
       if (state.turn === 1) {
@@ -11355,7 +11622,9 @@
           who.energy += turnIncome + bonus;
           who.nextBonus = 0;
           draw(who, 1);
-          showPhaseBanner(side === "player" ? "התור שלך" : "תור המחשב", side === "player" ? "player-turn" : "enemy-turn");
+          showPhaseBanner(side === "player" ? "התור שלך" : "תור המחשב", side === "player" ? "player-turn" : "enemy-turn", {
+            subtitle: `+${turnIncome}${bonus ? " +" + bonus : ""} אנ״ח · שליפת קלף`
+          });
           log(`${who.name} התחיל/ה תור: קיבל/ה ${turnIncome}${bonus ? " + " + bonus : ""} אנ״ח ושלף/ה קלף.`);
           render();
         }
@@ -11383,6 +11652,7 @@
 
       state.isBattling = true;
       render();
+      showPhaseBanner("המחשב חושב", "enemy-turn", { subtitle: "תור יריב" });
       await sleep(350);
       aiAct();
       cleanupDead();
@@ -11432,11 +11702,12 @@
       toast.timer = setTimeout(() => t.style.display = "none", 2400);
     }
 
-    function showPhaseBanner(text, typeClass) {
-      if (document.hidden || !document.body.classList.contains("fullscreen-mode")) return; // Only show in fullscreen
+    function showPhaseBanner(text, typeClass, options = {}) {
+      if (document.hidden) return;
       const banner = document.createElement("div");
       banner.className = "phase-banner";
-      banner.innerHTML = `<div class="phase-banner-text ${typeClass}">${text}</div>`;
+      const subtitle = options.subtitle ? `<div class="phase-banner-subtitle">${safeText(options.subtitle)}</div>` : "";
+      banner.innerHTML = `<div class="phase-banner-text ${typeClass}">${safeText(text)}${subtitle}</div>`;
       document.body.appendChild(banner);
       setTimeout(() => {
         if (banner.parentNode) banner.remove();
