@@ -1,7 +1,7 @@
 import "./styles.css";
 
 const legacyGameUrl =
-  "/legacy-card-battle.html";
+  "/legacy-card-battle.html?v=20260616-card-assets";
 
 document.querySelector("#app").innerHTML = `
   <main class="shell" aria-label="גני השמיים">
