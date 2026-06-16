@@ -2,6 +2,16 @@ import { db } from "./_lib/db.mjs";
 import { requireAdmin } from "./_lib/auth.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 
+function defaultImageUrlForCardId(id) {
+  const value = String(id || "").trim();
+  if (!/^[a-z0-9_-]+$/i.test(value)) return "";
+  return `assets/cards/${value}.png`;
+}
+
+function normalizedCardImageUrl(card) {
+  return String(card.imageUrl || card.image_url || "").trim() || defaultImageUrlForCardId(card.id);
+}
+
 function rowToCard(row) {
   return {
     ...(row.payload || {}),
@@ -35,7 +45,7 @@ function cardToColumns(card) {
     kind,
     name: String(card.name || "").trim(),
     cost: Number(card.cost || 0),
-    imageUrl: card.imageUrl || card.image_url || "",
+    imageUrl: normalizedCardImageUrl(card),
     emoji: card.emoji || "",
     accent: card.accent || "",
     race: kind === "monster" ? card.race || "" : null,

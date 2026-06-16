@@ -7,7 +7,19 @@ Heaven Gardens is a Hebrew browser card-battle game. The current playable game i
 - The playable prototype lives at `public/legacy-card-battle.html`.
 - Images, frames, and music live under `public/assets`.
 - The Vite app in `src/` currently wraps the legacy game in a full-screen iframe.
-- No database is used yet. Browser persistence is still handled by the legacy game's `localStorage` code.
+- Neon Postgres is used through Netlify Functions for auth, decks, and the card catalog. The game keeps a local fallback cache for offline or failed API loads.
+
+## Adding Card Images
+
+Card artwork is served as a static Netlify asset.
+
+1. Add the image file under `public/assets/cards`.
+2. Name the file exactly like the card id, for example `m_070.png`.
+3. In the card admin, create or update a card with the same id, for example `m_070`.
+4. If `imageUrl` is left empty, the game automatically uses `assets/cards/m_070.png`.
+5. Commit/push the image to GitHub and deploy the latest build to Netlify.
+
+After deployment, the image should be available at `https://heaven-gardens.netlify.app/assets/cards/m_070.png`.
 
 ## Scripts
 

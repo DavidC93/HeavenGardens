@@ -8573,6 +8573,17 @@
       return Math.max(min, Math.min(max, Math.round(n)));
     }
 
+    function defaultImageUrlForCardId(id) {
+      const value = String(id || "").trim();
+      if (!/^[a-z0-9_-]+$/i.test(value)) return "";
+      return `assets/cards/${value}.png`;
+    }
+
+    function normalizedCardImageUrl(card) {
+      const explicit = String(card?.imageUrl || card?.image_url || "").trim();
+      return explicit || defaultImageUrlForCardId(card?.id);
+    }
+
     function increaseStat(card, stat, amount) {
       const before = Number(card[stat] || 0);
       card[stat] = clampStat(before + amount);
@@ -8594,10 +8605,11 @@
       return {
         monsterCards: monsterCards.map(card => ({
           type: "monster",
-          imageUrl: "",
+          imageUrl: normalizedCardImageUrl(card),
           emoji: "🦸",
           accent: "#118ab2",
           ...card,
+          imageUrl: normalizedCardImageUrl(card),
           attack: clampStat(normalizeSmallNumberStat(card.attack)),
           defense: clampStat(normalizeSmallNumberStat(card.defense)),
           hp: clampStat(card.hp),
@@ -8609,10 +8621,11 @@
         })),
         spellCards: spellCards.map(card => ({
           type: "spell",
-          imageUrl: "",
+          imageUrl: normalizedCardImageUrl(card),
           emoji: "🔮",
           accent: "#9d4edd",
           ...card,
+          imageUrl: normalizedCardImageUrl(card),
           amount: ["buffAttack", "buffDefense", "debuffAttack"].includes(card.effect) ? normalizeSmallNumberStat(card.amount) : Number(card.amount || 0),
           cost: clampStat(card.cost),
           type: "spell"
@@ -11917,6 +11930,7 @@
     async function saveAdminCard() {
       try {
         const card = JSON.parse(document.getElementById("adminCardJson")?.value || "{}");
+        card.imageUrl = normalizedCardImageUrl(card);
         const data = await apiRequest("/cards", { method: "POST", body: { card } });
         remoteCardData = normalizeCardData(data.cards);
         adminSelectedCardId = card.id;
