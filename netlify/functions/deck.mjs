@@ -5,6 +5,7 @@ import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 const DECK_MIN_SIZE = 30;
 const DECK_MAX_SIZE = 40;
 const DECK_MAX_COPIES = 4;
+const MAX_GODS = 3;
 
 function normalizeCounts(counts) {
   const result = {};
@@ -15,9 +16,15 @@ function normalizeCounts(counts) {
   return result;
 }
 
-function validateCounts(counts) {
-  const size = Object.values(counts).reduce((sum, value) => sum + value, 0);
-  return size >= DECK_MIN_SIZE && size <= DECK_MAX_SIZE && Object.values(counts).every(value => value <= DECK_MAX_COPIES);
+// Gods (cards with payload.god = true) are a side selection of up to 3 and do not count toward the 30-40 deck size.
+function validateCounts(counts, godIds) {
+  let size = 0;
+  let gods = 0;
+  for (const [cardId, value] of Object.entries(counts)) {
+    if (godIds.has(cardId)) gods += 1;
+    else size += value;
+  }
+  return size >= DECK_MIN_SIZE && size <= DECK_MAX_SIZE && gods <= MAX_GODS && Object.values(counts).every(value => value <= DECK_MAX_COPIES);
 }
 
 export async function handler(event) {
@@ -42,12 +49,18 @@ export async function handler(event) {
 
     const body = await readJson(event);
     const counts = normalizeCounts(body.counts);
-    if (!validateCounts(counts)) return json(400, { error: "invalid_deck" });
 
     const cardIds = Object.keys(counts);
-    const existingRows = await sql`select id from cards where id = any(${cardIds}) and active = true`;
+    const existingRows = await sql`
+      select id, coalesce((payload->>'god')::boolean, false) as god
+      from cards
+      where id = any(${cardIds}) and active = true
+    `;
     const existing = new Set(existingRows.map(row => row.id));
     if (cardIds.some(id => !existing.has(id))) return json(400, { error: "unknown_card" });
+    const godIds = new Set(existingRows.filter(row => row.god).map(row => row.id));
+    for (const id of godIds) counts[id] = 1;
+    if (!validateCounts(counts, godIds)) return json(400, { error: "invalid_deck" });
 
     const deckRows = await sql`
       insert into user_decks (user_id, name, is_active)
