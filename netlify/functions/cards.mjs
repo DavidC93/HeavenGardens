@@ -85,10 +85,15 @@ export async function handler(event) {
     await requireAdmin(event);
     const body = await readJson(event);
     const card = body.card || body;
+    // The version the editor started from. Saving over a newer card would silently drop fields added since
+    // (e.g. translations), so such a save is refused. Clients that don't send a version are not checked.
+    const baseVersion = Number.isInteger(Number(card.version)) && Number(card.version) > 0 ? Number(card.version) : null;
+    delete card.version;
+    delete card.updatedAt;
     const c = cardToColumns(card);
     if (!c.id || !c.name) return json(400, { error: "invalid_card" });
 
-    await db()`
+    const saved = await db()`
       insert into cards (
         id, kind, name, cost, image_url, emoji, accent, race, war,
         attack, defense, hp, speed, target, effect, amount, description,
@@ -121,7 +126,13 @@ export async function handler(event) {
         payload = excluded.payload,
         active = true,
         version = cards.version + 1
+      where ${baseVersion}::int is null or cards.version <= ${baseVersion}::int
+      returning id
     `;
+    if (saved.length === 0) {
+      const [current] = await db()`select version from cards where id = ${c.id}`;
+      return json(409, { error: "card_changed", version: current?.version ?? null, cards: await listCards() });
+    }
 
     return json(200, { ok: true, cards: await listCards() });
   } catch (error) {
