@@ -1,6 +1,7 @@
 import { db } from "./_lib/db.mjs";
 import { requireUser } from "./_lib/auth.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
+import { deckOwnershipProblems } from "./_lib/economy.mjs";
 
 const DECK_MIN_SIZE = 30;
 const DECK_MAX_SIZE = 40;
@@ -61,6 +62,9 @@ export async function handler(event) {
     const godIds = new Set(existingRows.filter(row => row.god).map(row => row.id));
     for (const id of godIds) counts[id] = 1;
     if (!validateCounts(counts, godIds)) return json(400, { error: "invalid_deck" });
+    // decks are built from the player's own collection
+    const missing = await deckOwnershipProblems(sql, user.id, counts);
+    if (missing.length > 0) return json(400, { error: "cards_not_owned", cards: missing });
 
     const deckRows = await sql`
       insert into user_decks (user_id, name, is_active)
