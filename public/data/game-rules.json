@@ -1,0 +1,1268 @@
+{
+  "exportedAt": "2026-10-13T15:26:55.3405614Z",
+  "limits": {
+    "maxAbilities": 3,
+    "maxGodAbilities": 3,
+    "statMin": 1,
+    "statMax": 99,
+    "speedMax": 100,
+    "amountMax": 99
+  },
+  "godWar": "אל",
+  "godRace": "אלים",
+  "rarities": [
+    {
+      "id": "bronze",
+      "name": {
+        "he": "ארד",
+        "en": "Bronze"
+      }
+    },
+    {
+      "id": "silver",
+      "name": {
+        "he": "כסף",
+        "en": "Silver"
+      }
+    },
+    {
+      "id": "gold",
+      "name": {
+        "he": "זהב",
+        "en": "Gold"
+      }
+    },
+    {
+      "id": "emerald",
+      "name": {
+        "he": "ברקת",
+        "en": "Emerald"
+      }
+    },
+    {
+      "id": "diamond",
+      "name": {
+        "he": "יהלום",
+        "en": "Diamond"
+      }
+    }
+  ],
+  "wars": [
+    {
+      "id": "פיזי",
+      "name": {
+        "he": "פיזי",
+        "en": "Physical"
+      },
+      "strong": ["אנרגיה"],
+      "weak": ["קסם"]
+    },
+    {
+      "id": "אלמנטלי",
+      "name": {
+        "he": "אלמנטלי",
+        "en": "Elemental"
+      },
+      "strong": ["קסם"],
+      "weak": ["אנרגיה"]
+    },
+    {
+      "id": "אנרגיה",
+      "name": {
+        "he": "אנרגיה",
+        "en": "Energy"
+      },
+      "strong": ["אלמנטלי"],
+      "weak": ["פיזי"]
+    },
+    {
+      "id": "קסם",
+      "name": {
+        "he": "קסם",
+        "en": "Magic"
+      },
+      "strong": ["פיזי"],
+      "weak": ["אלמנטלי"]
+    },
+    {
+      "id": "משולב",
+      "name": {
+        "he": "משולב",
+        "en": "Hybrid"
+      },
+      "strong": [],
+      "weak": []
+    }
+  ],
+  "abilities": [
+    {
+      "id": "pierce",
+      "base": "pierce",
+      "level": 0,
+      "name": {
+        "he": "חדירה",
+        "en": "Pierce"
+      },
+      "desc": {
+        "he": "מתעלמת לגמרי מההגנה של המפלצת היריבה בזמן תקיפה.",
+        "en": "Completely ignores the defending monster's defense when attacking."
+      },
+      "color": "#4073D9"
+    },
+    {
+      "id": "lifesteal1",
+      "base": "lifesteal",
+      "level": 1,
+      "name": {
+        "he": "שואב חיים 1",
+        "en": "Lifesteal 1"
+      },
+      "desc": {
+        "he": "כאשר המפלצת תוקפת בהצלחה, היא מתרפאת ב־1.",
+        "en": "After a successful attack, heals itself by 1."
+      },
+      "color": "#CC0D26"
+    },
+    {
+      "id": "lifesteal2",
+      "base": "lifesteal",
+      "level": 2,
+      "name": {
+        "he": "שואב חיים 2",
+        "en": "Lifesteal 2"
+      },
+      "desc": {
+        "he": "כאשר המפלצת תוקפת, היא מתרפאת בכמות הנזק שעשתה, עד 2.",
+        "en": "When it attacks, heals itself by the damage dealt, up to 2."
+      },
+      "color": "#CC0D26"
+    },
+    {
+      "id": "lifesteal3",
+      "base": "lifesteal",
+      "level": 3,
+      "name": {
+        "he": "שואב חיים 3",
+        "en": "Lifesteal 3"
+      },
+      "desc": {
+        "he": "כאשר המפלצת תוקפת, היא מתרפאת בכמות הנזק שעשתה, עד 3.",
+        "en": "When it attacks, heals itself by the damage dealt, up to 3."
+      },
+      "color": "#CC0D26"
+    },
+    {
+      "id": "rage",
+      "base": "rage",
+      "level": 0,
+      "name": {
+        "he": "כעס",
+        "en": "Rage"
+      },
+      "desc": {
+        "he": "בכל פעם שהמפלצת מותקפת ונשארת בחיים, היא מקבלת +1 התקפה ו־+1 הגנה.",
+        "en": "Each time it is attacked and survives, gains +1 attack and +1 defense."
+      },
+      "color": "#E64C1A"
+    },
+    {
+      "id": "healer1",
+      "base": "healer",
+      "level": 1,
+      "name": {
+        "he": "מרפא 1",
+        "en": "Healer 1"
+      },
+      "desc": {
+        "he": "לפני תחילת קרב, מרפא ב־1 את שאר המפלצות בצד שלו.",
+        "en": "Before combat, heals the other monsters on its side by 1."
+      },
+      "color": "#1AA659"
+    },
+    {
+      "id": "healer2",
+      "base": "healer",
+      "level": 2,
+      "name": {
+        "he": "מרפא 2",
+        "en": "Healer 2"
+      },
+      "desc": {
+        "he": "לפני תחילת קרב, מרפא ב־2 את שאר המפלצות בצד שלו.",
+        "en": "Before combat, heals the other monsters on its side by 2."
+      },
+      "color": "#1AA659"
+    },
+    {
+      "id": "healer3",
+      "base": "healer",
+      "level": 3,
+      "name": {
+        "he": "מרפא 3",
+        "en": "Healer 3"
+      },
+      "desc": {
+        "he": "לפני תחילת קרב, מרפא ב־3 את שאר המפלצות בצד שלו.",
+        "en": "Before combat, heals the other monsters on its side by 3."
+      },
+      "color": "#1AA659"
+    },
+    {
+      "id": "guard1",
+      "base": "guard",
+      "level": 1,
+      "name": {
+        "he": "מחסום 1",
+        "en": "Barrier 1"
+      },
+      "desc": {
+        "he": "מפחית 1 נזק מכל התקפה שמגיעה אליו. תמיד נשאר נזק של לפחות 1.",
+        "en": "Reduces every incoming attack by 1 damage. At least 1 damage always gets through."
+      },
+      "color": "#3373D9"
+    },
+    {
+      "id": "guard2",
+      "base": "guard",
+      "level": 2,
+      "name": {
+        "he": "מחסום 2",
+        "en": "Barrier 2"
+      },
+      "desc": {
+        "he": "מפחית 2 נזק מכל התקפה שמגיעה אליו. תמיד נשאר נזק של לפחות 1.",
+        "en": "Reduces every incoming attack by 2 damage. At least 1 damage always gets through."
+      },
+      "color": "#3373D9"
+    },
+    {
+      "id": "guard3",
+      "base": "guard",
+      "level": 3,
+      "name": {
+        "he": "מחסום 3",
+        "en": "Barrier 3"
+      },
+      "desc": {
+        "he": "מפחית 3 נזק מכל התקפה שמגיעה אליו. תמיד נשאר נזק של לפחות 1.",
+        "en": "Reduces every incoming attack by 3 damage. At least 1 damage always gets through."
+      },
+      "color": "#3373D9"
+    },
+    {
+      "id": "haste",
+      "base": "haste",
+      "level": 0,
+      "name": {
+        "he": "מתפרץ",
+        "en": "Burst"
+      },
+      "desc": {
+        "he": "אם זו המפלצת היחידה בצד שלה בזירה, היא מקבלת +20 מהירות לצורך סדר התקיפה, עד מקסימום 100.",
+        "en": "If it is the only monster on its side, gains +20 speed for attack order (max 100)."
+      },
+      "color": "#1A99BF"
+    },
+    {
+      "id": "revenge1",
+      "base": "revenge",
+      "level": 1,
+      "name": {
+        "he": "נקמה 1",
+        "en": "Revenge 1"
+      },
+      "desc": {
+        "he": "כאשר המפלצת מושמדת, היא גורמת 2 נזק למטרה שמולה, או 1 נזק ישיר לשחקן אם אין מולה מטרה.",
+        "en": "When destroyed, deals 2 damage to the target opposite, or 1 direct damage to the player if there is none."
+      },
+      "color": "#4C4C4C"
+    },
+    {
+      "id": "revenge2",
+      "base": "revenge",
+      "level": 2,
+      "name": {
+        "he": "נקמה 2",
+        "en": "Revenge 2"
+      },
+      "desc": {
+        "he": "כאשר המפלצת מושמדת, היא גורמת 4 נזק למטרה שמולה, או 2 נזק ישיר לשחקן אם אין מולה מטרה.",
+        "en": "When destroyed, deals 4 damage to the target opposite, or 2 direct damage to the player if there is none."
+      },
+      "color": "#4C4C4C"
+    },
+    {
+      "id": "revenge3",
+      "base": "revenge",
+      "level": 3,
+      "name": {
+        "he": "נקמה 3",
+        "en": "Revenge 3"
+      },
+      "desc": {
+        "he": "כאשר המפלצת מושמדת, היא גורמת 6 נזק למטרה שמולה, או 2 נזק ישיר לשחקן אם אין מולה מטרה.",
+        "en": "When destroyed, deals 6 damage to the target opposite, or 2 direct damage to the player if there is none."
+      },
+      "color": "#4C4C4C"
+    },
+    {
+      "id": "poison1",
+      "base": "poison",
+      "level": 1,
+      "name": {
+        "he": "רעיל 1",
+        "en": "Venomous 1"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 15% להרעיל את האויב. מפלצת מורעלת מאבדת 1 חיים בסוף כל קרב.",
+        "en": "After a successful attack, 15% chance to poison the enemy. Poisoned monsters lose 1 health at the end of each battle."
+      },
+      "color": "#4CA61A"
+    },
+    {
+      "id": "poison2",
+      "base": "poison",
+      "level": 2,
+      "name": {
+        "he": "רעיל 2",
+        "en": "Venomous 2"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 30% להרעיל את האויב. מפלצת מורעלת מאבדת 1 חיים בסוף כל קרב.",
+        "en": "After a successful attack, 30% chance to poison the enemy. Poisoned monsters lose 1 health at the end of each battle."
+      },
+      "color": "#4CA61A"
+    },
+    {
+      "id": "poison3",
+      "base": "poison",
+      "level": 3,
+      "name": {
+        "he": "רעיל 3",
+        "en": "Venomous 3"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 50% להרעיל את האויב. מפלצת מורעלת מאבדת 1 חיים בסוף כל קרב.",
+        "en": "After a successful attack, 50% chance to poison the enemy. Poisoned monsters lose 1 health at the end of each battle."
+      },
+      "color": "#4CA61A"
+    },
+    {
+      "id": "breakthrough",
+      "base": "breakthrough",
+      "level": 0,
+      "name": {
+        "he": "פורץ",
+        "en": "Breaker"
+      },
+      "desc": {
+        "he": "כאשר המפלצת תוקפת ישירות את השחקן היריב, היא גורמת 2 נזק במקום 1.",
+        "en": "Deals 2 damage instead of 1 when attacking the opposing player directly."
+      },
+      "color": "#8C5926"
+    },
+    {
+      "id": "tough",
+      "base": "tough",
+      "level": 0,
+      "name": {
+        "he": "קשוח",
+        "en": "Tough"
+      },
+      "desc": {
+        "he": "המפלצת לא יכולה לספוג יותר מ־3 נזק מהתקפה אחת.",
+        "en": "Cannot take more than 3 damage from a single attack."
+      },
+      "color": "#737373"
+    },
+    {
+      "id": "strengthen1",
+      "base": "strengthen",
+      "level": 1,
+      "name": {
+        "he": "מתחזק 1",
+        "en": "Strengthen 1"
+      },
+      "desc": {
+        "he": "לפני שהקרב מתחיל, המפלצת מקבלת +1 התקפה, עד מקסימום 99.",
+        "en": "Before combat, gains +1 attack (max 99)."
+      },
+      "color": "#8C591A"
+    },
+    {
+      "id": "strengthen2",
+      "base": "strengthen",
+      "level": 2,
+      "name": {
+        "he": "מתחזק 2",
+        "en": "Strengthen 2"
+      },
+      "desc": {
+        "he": "לפני שהקרב מתחיל, המפלצת מקבלת +2 התקפה, עד מקסימום 99.",
+        "en": "Before combat, gains +2 attack (max 99)."
+      },
+      "color": "#8C591A"
+    },
+    {
+      "id": "fortify1",
+      "base": "fortify",
+      "level": 1,
+      "name": {
+        "he": "מקשיח 1",
+        "en": "Fortify 1"
+      },
+      "desc": {
+        "he": "לפני שהקרב מתחיל, המפלצת מקבלת +1 הגנה, עד מקסימום 99.",
+        "en": "Before combat, gains +1 defense (max 99)."
+      },
+      "color": "#4059BF"
+    },
+    {
+      "id": "fortify2",
+      "base": "fortify",
+      "level": 2,
+      "name": {
+        "he": "מקשיח 2",
+        "en": "Fortify 2"
+      },
+      "desc": {
+        "he": "לפני שהקרב מתחיל, המפלצת מקבלת +2 הגנה, עד מקסימום 99.",
+        "en": "Before combat, gains +2 defense (max 99)."
+      },
+      "color": "#4059BF"
+    },
+    {
+      "id": "regen1",
+      "base": "regen",
+      "level": 1,
+      "name": {
+        "he": "מתרפא 1",
+        "en": "Regenerate 1"
+      },
+      "desc": {
+        "he": "לפני שהקרב מתחיל, המפלצת מתרפאת ב־1 חיים, עד למקסימום החיים שלה.",
+        "en": "Before combat, heals 1 hp up to its maximum."
+      },
+      "color": "#D92640"
+    },
+    {
+      "id": "regen2",
+      "base": "regen",
+      "level": 2,
+      "name": {
+        "he": "מתרפא 2",
+        "en": "Regenerate 2"
+      },
+      "desc": {
+        "he": "לפני שהקרב מתחיל, המפלצת מתרפאת ב־2 חיים, עד למקסימום החיים שלה.",
+        "en": "Before combat, heals 2 hp up to its maximum."
+      },
+      "color": "#D92640"
+    },
+    {
+      "id": "energy1",
+      "base": "energy",
+      "level": 1,
+      "name": {
+        "he": "אנרגיה 1",
+        "en": "Energy 1"
+      },
+      "desc": {
+        "he": "בתחילת התור שלך, מעניק 1 אנ״ח נוסף.",
+        "en": "At the start of your turn, grants 1 extra energy."
+      },
+      "color": "#F2990D"
+    },
+    {
+      "id": "energy2",
+      "base": "energy",
+      "level": 2,
+      "name": {
+        "he": "אנרגיה 2",
+        "en": "Energy 2"
+      },
+      "desc": {
+        "he": "בתחילת התור שלך, מעניק 2 אנ״ח נוספים.",
+        "en": "At the start of your turn, grants 2 extra energy."
+      },
+      "color": "#F2990D"
+    },
+    {
+      "id": "leader1",
+      "base": "leader",
+      "level": 1,
+      "name": {
+        "he": "מנהיג 1",
+        "en": "Leader 1"
+      },
+      "desc": {
+        "he": "לפני שהקרב מתחיל, מחזק ב־1 התקפה את כל המפלצות בצד שלך מאותו סוג יצור כמו המנהיג, עד מקסימום 99.",
+        "en": "Before combat, gives +1 attack to all your monsters of the leader's race (max 99)."
+      },
+      "color": "#E6A60D"
+    },
+    {
+      "id": "leader2",
+      "base": "leader",
+      "level": 2,
+      "name": {
+        "he": "מנהיג 2",
+        "en": "Leader 2"
+      },
+      "desc": {
+        "he": "לפני שהקרב מתחיל, מחזק ב־2 התקפה את כל המפלצות בצד שלך מאותו סוג יצור כמו המנהיג, עד מקסימום 99.",
+        "en": "Before combat, gives +2 attack to all your monsters of the leader's race (max 99)."
+      },
+      "color": "#E6A60D"
+    },
+    {
+      "id": "souleater1",
+      "base": "souleater",
+      "level": 1,
+      "name": {
+        "he": "אוכל נשמות 1",
+        "en": "Soul Eater 1"
+      },
+      "desc": {
+        "he": "מקבלת +1 התקפה על כל קלף שהיא משמידה.",
+        "en": "Gains +1 attack for every card it destroys."
+      },
+      "color": "#7333A6"
+    },
+    {
+      "id": "souleater2",
+      "base": "souleater",
+      "level": 2,
+      "name": {
+        "he": "אוכל נשמות 2",
+        "en": "Soul Eater 2"
+      },
+      "desc": {
+        "he": "מקבלת +2 התקפה על כל קלף שהיא משמידה.",
+        "en": "Gains +2 attack for every card it destroys."
+      },
+      "color": "#7333A6"
+    },
+    {
+      "id": "souleater3",
+      "base": "souleater",
+      "level": 3,
+      "name": {
+        "he": "אוכל נשמות 3",
+        "en": "Soul Eater 3"
+      },
+      "desc": {
+        "he": "מקבלת +3 התקפה על כל קלף שהיא משמידה.",
+        "en": "Gains +3 attack for every card it destroys."
+      },
+      "color": "#7333A6"
+    },
+    {
+      "id": "underworld1",
+      "base": "underworld",
+      "level": 1,
+      "name": {
+        "he": "מתחזק מהשאול 1",
+        "en": "Underworld Might 1"
+      },
+      "desc": {
+        "he": "מקבלת +1 התקפה על כל מפלצת שלך בשאול.",
+        "en": "Gains +1 attack for every monster of yours in the Underworld."
+      },
+      "color": "#731A26"
+    },
+    {
+      "id": "underworld2",
+      "base": "underworld",
+      "level": 2,
+      "name": {
+        "he": "מתחזק מהשאול 2",
+        "en": "Underworld Might 2"
+      },
+      "desc": {
+        "he": "מקבלת +2 התקפה על כל מפלצת שלך בשאול.",
+        "en": "Gains +2 attack for every monster of yours in the Underworld."
+      },
+      "color": "#731A26"
+    },
+    {
+      "id": "underworld3",
+      "base": "underworld",
+      "level": 3,
+      "name": {
+        "he": "מתחזק מהשאול 3",
+        "en": "Underworld Might 3"
+      },
+      "desc": {
+        "he": "מקבלת +3 התקפה על כל מפלצת שלך בשאול.",
+        "en": "Gains +3 attack for every monster of yours in the Underworld."
+      },
+      "color": "#731A26"
+    },
+    {
+      "id": "dodge1",
+      "base": "dodge",
+      "level": 1,
+      "name": {
+        "he": "התחמקות 1",
+        "en": "Evasion 1"
+      },
+      "desc": {
+        "he": "סיכוי של 15% להתחמק ממתקפה.",
+        "en": "15% chance to dodge an attack."
+      },
+      "color": "#3399A6"
+    },
+    {
+      "id": "dodge2",
+      "base": "dodge",
+      "level": 2,
+      "name": {
+        "he": "התחמקות 2",
+        "en": "Evasion 2"
+      },
+      "desc": {
+        "he": "סיכוי של 30% להתחמק ממתקפה.",
+        "en": "30% chance to dodge an attack."
+      },
+      "color": "#3399A6"
+    },
+    {
+      "id": "dodge3",
+      "base": "dodge",
+      "level": 3,
+      "name": {
+        "he": "התחמקות 3",
+        "en": "Evasion 3"
+      },
+      "desc": {
+        "he": "סיכוי של 50% להתחמק ממתקפה.",
+        "en": "50% chance to dodge an attack."
+      },
+      "color": "#3399A6"
+    },
+    {
+      "id": "drain1",
+      "base": "drain",
+      "level": 1,
+      "name": {
+        "he": "שאיבת אנרגיה 1",
+        "en": "Energy Siphon 1"
+      },
+      "desc": {
+        "he": "בתחילת כל תור שלך, שואב 1 אנ״ח מהיריב ומעביר אותה אליך.",
+        "en": "At the start of each of your turns, steals 1 energy from the opponent."
+      },
+      "color": "#9933B2"
+    },
+    {
+      "id": "drain2",
+      "base": "drain",
+      "level": 2,
+      "name": {
+        "he": "שאיבת אנרגיה 2",
+        "en": "Energy Siphon 2"
+      },
+      "desc": {
+        "he": "בתחילת כל תור שלך, שואב 2 אנ״ח מהיריב ומעביר אותן אליך.",
+        "en": "At the start of each of your turns, steals 2 energy from the opponent."
+      },
+      "color": "#9933B2"
+    },
+    {
+      "id": "curser1",
+      "base": "curser",
+      "level": 1,
+      "name": {
+        "he": "מכשף 1",
+        "en": "Hexer 1"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 12% להטיל קללה על האויב.",
+        "en": "After a successful attack, 12% chance to curse the enemy."
+      },
+      "color": "#801A99"
+    },
+    {
+      "id": "curser2",
+      "base": "curser",
+      "level": 2,
+      "name": {
+        "he": "מכשף 2",
+        "en": "Hexer 2"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 25% להטיל קללה על האויב.",
+        "en": "After a successful attack, 25% chance to curse the enemy."
+      },
+      "color": "#801A99"
+    },
+    {
+      "id": "curser3",
+      "base": "curser",
+      "level": 3,
+      "name": {
+        "he": "מכשף 3",
+        "en": "Hexer 3"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 40% להטיל קללה על האויב.",
+        "en": "After a successful attack, 40% chance to curse the enemy."
+      },
+      "color": "#801A99"
+    },
+    {
+      "id": "paralyzer1",
+      "base": "paralyzer",
+      "level": 1,
+      "name": {
+        "he": "משתק 1",
+        "en": "Paralyzer 1"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 15% לשתק את האויב.",
+        "en": "After a successful attack, 15% chance to paralyze the enemy."
+      },
+      "color": "#1A8CD9"
+    },
+    {
+      "id": "paralyzer2",
+      "base": "paralyzer",
+      "level": 2,
+      "name": {
+        "he": "משתק 2",
+        "en": "Paralyzer 2"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 30% לשתק את האויב.",
+        "en": "After a successful attack, 30% chance to paralyze the enemy."
+      },
+      "color": "#1A8CD9"
+    },
+    {
+      "id": "paralyzer3",
+      "base": "paralyzer",
+      "level": 3,
+      "name": {
+        "he": "משתק 3",
+        "en": "Paralyzer 3"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 50% לשתק את האויב.",
+        "en": "After a successful attack, 50% chance to paralyze the enemy."
+      },
+      "color": "#1A8CD9"
+    },
+    {
+      "id": "freezer1",
+      "base": "freezer",
+      "level": 1,
+      "name": {
+        "he": "מקפיא 1",
+        "en": "Frostbringer 1"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 15% להקפיא את האויב.",
+        "en": "After a successful attack, 15% chance to freeze the enemy."
+      },
+      "color": "#4CB2F2"
+    },
+    {
+      "id": "freezer2",
+      "base": "freezer",
+      "level": 2,
+      "name": {
+        "he": "מקפיא 2",
+        "en": "Frostbringer 2"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 30% להקפיא את האויב.",
+        "en": "After a successful attack, 30% chance to freeze the enemy."
+      },
+      "color": "#4CB2F2"
+    },
+    {
+      "id": "freezer3",
+      "base": "freezer",
+      "level": 3,
+      "name": {
+        "he": "מקפיא 3",
+        "en": "Frostbringer 3"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 50% להקפיא את האויב.",
+        "en": "After a successful attack, 50% chance to freeze the enemy."
+      },
+      "color": "#4CB2F2"
+    },
+    {
+      "id": "avenger",
+      "base": "avenger",
+      "level": 0,
+      "name": {
+        "he": "נוקם",
+        "en": "Avenger"
+      },
+      "desc": {
+        "he": "כאשר מפלצת אחרת שלך מושמדת על ידי האויב, עוברת למצב התעלות.",
+        "en": "When another monster of yours is destroyed by the enemy, it becomes exalted."
+      },
+      "color": "#D9331A"
+    },
+    {
+      "id": "laststand",
+      "base": "laststand",
+      "level": 0,
+      "name": {
+        "he": "מוצא אחרון",
+        "en": "Last Stand"
+      },
+      "desc": {
+        "he": "כאשר נשארו לך 3 חיים או פחות, עוברת למצב התעלות.",
+        "en": "When you are down to 3 health or less, it becomes exalted."
+      },
+      "color": "#CC8C1A"
+    },
+    {
+      "id": "crit1",
+      "base": "crit",
+      "level": 1,
+      "name": {
+        "he": "נזק קריטי 1",
+        "en": "Critical Hit 1"
+      },
+      "desc": {
+        "he": "סיכוי של 15% לגרום נזק כפול בהתקפה.",
+        "en": "15% chance to deal double damage when attacking."
+      },
+      "color": "#E63326"
+    },
+    {
+      "id": "crit2",
+      "base": "crit",
+      "level": 2,
+      "name": {
+        "he": "נזק קריטי 2",
+        "en": "Critical Hit 2"
+      },
+      "desc": {
+        "he": "סיכוי של 30% לגרום נזק כפול בהתקפה.",
+        "en": "30% chance to deal double damage when attacking."
+      },
+      "color": "#E63326"
+    },
+    {
+      "id": "crit3",
+      "base": "crit",
+      "level": 3,
+      "name": {
+        "he": "נזק קריטי 3",
+        "en": "Critical Hit 3"
+      },
+      "desc": {
+        "he": "סיכוי של 50% לגרום נזק כפול בהתקפה.",
+        "en": "50% chance to deal double damage when attacking."
+      },
+      "color": "#E63326"
+    },
+    {
+      "id": "area",
+      "base": "area",
+      "level": 0,
+      "name": {
+        "he": "נזק אזורי",
+        "en": "Area Damage"
+      },
+      "desc": {
+        "he": "כשהיא תוקפת מפלצת, גם המפלצות שלידה סופגות חצי מהנזק, פחות ההגנה שלהן (לפחות 1).",
+        "en": "When it attacks a monster, the monsters beside it take half the damage too, minus their own defense (at least 1)."
+      },
+      "color": "#D9731A"
+    },
+    {
+      "id": "burn1",
+      "base": "burn",
+      "level": 1,
+      "name": {
+        "he": "שורף 1",
+        "en": "Burning 1"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 15% לשרוף את האויב. מפלצת שרופה סופגת 3 נזק בסוף הקרב, 2 בקרב הבא ו־1 בזה שאחריו.",
+        "en": "After a successful attack, 15% chance to set the enemy on fire. A burning monster takes 3 damage at the end of the battle, 2 in the next and 1 in the one after."
+      },
+      "color": "#F2660D"
+    },
+    {
+      "id": "burn2",
+      "base": "burn",
+      "level": 2,
+      "name": {
+        "he": "שורף 2",
+        "en": "Burning 2"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 30% לשרוף את האויב. מפלצת שרופה סופגת 3 נזק בסוף הקרב, 2 בקרב הבא ו־1 בזה שאחריו.",
+        "en": "After a successful attack, 30% chance to set the enemy on fire. A burning monster takes 3 damage at the end of the battle, 2 in the next and 1 in the one after."
+      },
+      "color": "#F2660D"
+    },
+    {
+      "id": "burn3",
+      "base": "burn",
+      "level": 3,
+      "name": {
+        "he": "שורף 3",
+        "en": "Burning 3"
+      },
+      "desc": {
+        "he": "בהתקפה מוצלחת, סיכוי של 50% לשרוף את האויב. מפלצת שרופה סופגת 3 נזק בסוף הקרב, 2 בקרב הבא ו־1 בזה שאחריו.",
+        "en": "After a successful attack, 50% chance to set the enemy on fire. A burning monster takes 3 damage at the end of the battle, 2 in the next and 1 in the one after."
+      },
+      "color": "#F2660D"
+    },
+    {
+      "id": "motivation1",
+      "base": "motivation",
+      "level": 1,
+      "name": {
+        "he": "מוטיבציה 1",
+        "en": "Motivation 1"
+      },
+      "desc": {
+        "he": "כל עוד היא בזירה, שאר המפלצות שלך בזירה מקבלות +2 התקפה.",
+        "en": "While it is on the board, your other monsters on the board get +2 attack."
+      },
+      "color": "#D92659"
+    },
+    {
+      "id": "motivation2",
+      "base": "motivation",
+      "level": 2,
+      "name": {
+        "he": "מוטיבציה 2",
+        "en": "Motivation 2"
+      },
+      "desc": {
+        "he": "כל עוד היא בזירה, שאר המפלצות שלך בזירה מקבלות +4 התקפה.",
+        "en": "While it is on the board, your other monsters on the board get +4 attack."
+      },
+      "color": "#D92659"
+    },
+    {
+      "id": "motivation3",
+      "base": "motivation",
+      "level": 3,
+      "name": {
+        "he": "מוטיבציה 3",
+        "en": "Motivation 3"
+      },
+      "desc": {
+        "he": "כל עוד היא בזירה, שאר המפלצות שלך בזירה מקבלות +6 התקפה.",
+        "en": "While it is on the board, your other monsters on the board get +6 attack."
+      },
+      "color": "#D92659"
+    }
+  ],
+  "spellTargets": [
+    {
+      "id": "enemy",
+      "name": {
+        "he": "אויב",
+        "en": "Enemy"
+      }
+    },
+    {
+      "id": "friendly",
+      "name": {
+        "he": "שלך",
+        "en": "Yours"
+      }
+    },
+    {
+      "id": "none",
+      "name": {
+        "he": "מיידי",
+        "en": "Instant"
+      }
+    },
+    {
+      "id": "allEnemy",
+      "name": {
+        "he": "כל האויבים",
+        "en": "All enemies"
+      }
+    },
+    {
+      "id": "allFriendly",
+      "name": {
+        "he": "כל המפלצות שלך",
+        "en": "All your monsters"
+      }
+    },
+    {
+      "id": "enemyPlayer",
+      "name": {
+        "he": "שחקן אויב",
+        "en": "Enemy player"
+      }
+    },
+    {
+      "id": "anyMonster",
+      "name": {
+        "he": "כל מפלצת",
+        "en": "Any monster"
+      }
+    },
+    {
+      "id": "underworld",
+      "name": {
+        "he": "מהשאול",
+        "en": "From the Underworld"
+      }
+    }
+  ],
+  "spellEffects": [
+    {
+      "id": "damage",
+      "name": {
+        "he": "נזק",
+        "en": "Damage"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "heal",
+      "name": {
+        "he": "ריפוי",
+        "en": "Heal"
+      },
+      "targets": ["friendly", "allFriendly"]
+    },
+    {
+      "id": "buffAttack",
+      "name": {
+        "he": "חיזוק התקפה",
+        "en": "Attack buff"
+      },
+      "targets": ["friendly", "allFriendly"]
+    },
+    {
+      "id": "buffDefense",
+      "name": {
+        "he": "חיזוק הגנה",
+        "en": "Defense buff"
+      },
+      "targets": ["friendly", "allFriendly"]
+    },
+    {
+      "id": "nextIncome",
+      "name": {
+        "he": "בונוס אנ״ח",
+        "en": "Energy bonus"
+      },
+      "targets": []
+    },
+    {
+      "id": "damageAllEnemy",
+      "name": {
+        "he": "נזק לכל האויבים",
+        "en": "Damage all enemies"
+      },
+      "targets": []
+    },
+    {
+      "id": "debuffAttack",
+      "name": {
+        "he": "החלשת התקפה",
+        "en": "Weaken attack"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "destroy",
+      "name": {
+        "he": "השמדה",
+        "en": "Destroy"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "drainEnergy",
+      "name": {
+        "he": "שאיבת אנרגיה",
+        "en": "Drain energy"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "draw",
+      "name": {
+        "he": "שליפה",
+        "en": "Draw"
+      },
+      "targets": []
+    },
+    {
+      "id": "directPlayer",
+      "name": {
+        "he": "נזק ישיר",
+        "en": "Direct damage"
+      },
+      "targets": []
+    },
+    {
+      "id": "revive",
+      "name": {
+        "he": "תחייה",
+        "en": "Revive"
+      },
+      "targets": []
+    },
+    {
+      "id": "paralyze",
+      "name": {
+        "he": "שיתוק",
+        "en": "Paralyze"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "paralyzeDamage",
+      "name": {
+        "he": "שיתוק ונזק",
+        "en": "Paralyze and damage"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "poisonTarget",
+      "name": {
+        "he": "הרעלה",
+        "en": "Poison"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "curse",
+      "name": {
+        "he": "קללה",
+        "en": "Curse"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "freeze",
+      "name": {
+        "he": "קיפאון",
+        "en": "Freeze"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "exalt",
+      "name": {
+        "he": "התעלות",
+        "en": "Exaltation"
+      },
+      "targets": ["friendly", "allFriendly"]
+    },
+    {
+      "id": "vacuum",
+      "name": {
+        "he": "הורדת אנ״ח ליריב",
+        "en": "Drain enemy energy"
+      },
+      "targets": ["enemyPlayer"]
+    },
+    {
+      "id": "mindControl",
+      "name": {
+        "he": "שטיפת מוח",
+        "en": "Mind control"
+      },
+      "targets": ["enemy"]
+    },
+    {
+      "id": "bounce",
+      "name": {
+        "he": "החזרה ליד",
+        "en": "Return to hand"
+      },
+      "targets": ["anyMonster"]
+    },
+    {
+      "id": "resurrect",
+      "name": {
+        "he": "תחיית המתים",
+        "en": "Raise the dead"
+      },
+      "targets": ["underworld"]
+    }
+  ],
+  "races": [
+    {
+      "id": "חיות",
+      "name": {
+        "he": "חיות",
+        "en": "Beasts"
+      }
+    },
+    {
+      "id": "בני אדם",
+      "name": {
+        "he": "בני אדם",
+        "en": "Humans"
+      }
+    },
+    {
+      "id": "אלפים",
+      "name": {
+        "he": "אלפים",
+        "en": "Elves"
+      }
+    },
+    {
+      "id": "רובוטים",
+      "name": {
+        "he": "רובוטים",
+        "en": "Robots"
+      }
+    },
+    {
+      "id": "דרקונים",
+      "name": {
+        "he": "דרקונים",
+        "en": "Dragons"
+      }
+    },
+    {
+      "id": "שדים",
+      "name": {
+        "he": "שדים",
+        "en": "Demons"
+      }
+    },
+    {
+      "id": "מוטנטים",
+      "name": {
+        "he": "מוטנטים",
+        "en": "Mutants"
+      }
+    },
+    {
+      "id": "חייזרים",
+      "name": {
+        "he": "חייזרים",
+        "en": "Aliens"
+      }
+    },
+    {
+      "id": "אלים",
+      "name": {
+        "he": "אלים",
+        "en": "Gods"
+      }
+    }
+  ]
+}

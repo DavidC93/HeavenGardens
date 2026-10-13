@@ -1,6 +1,7 @@
 import { db } from "./_lib/db.mjs";
 import { requireUser } from "./_lib/auth.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
+import { rateLimit } from "./_lib/ratelimit.mjs";
 import { deckOwnershipProblems } from "./_lib/economy.mjs";
 
 const DECK_MIN_SIZE = 30;
@@ -47,6 +48,7 @@ export async function handler(event) {
     }
 
     if (event.httpMethod !== "PUT") return methodNotAllowed(["GET", "PUT"]);
+    await rateLimit("deck", user.id, sql);
 
     const body = await readJson(event);
     const counts = normalizeCounts(body.counts);

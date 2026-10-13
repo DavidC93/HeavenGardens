@@ -1,5 +1,6 @@
 import { db } from "./_lib/db.mjs";
 import { passwordHash, sha256 } from "./_lib/auth.mjs";
+import { clientIp, rateLimit } from "./_lib/ratelimit.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 
 export async function handler(event) {
@@ -12,6 +13,7 @@ export async function handler(event) {
     if (password.length < 8) return json(400, { error: "weak_password" });
 
     const sql = db();
+    await rateLimit("resetPassword", clientIp(event), sql);
     const rows = await sql`
       select id, user_id
       from password_reset_tokens

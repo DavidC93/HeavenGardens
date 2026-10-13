@@ -1,4 +1,5 @@
 import { requireUser } from "./_lib/auth.mjs";
+import { rateLimit } from "./_lib/ratelimit.mjs";
 import { handleError, json, methodNotAllowed } from "./_lib/http.mjs";
 
 // Signs the logged-in Heaven Gardens player into Unity Gaming Services with a Custom ID (the account id), so the
@@ -37,6 +38,7 @@ export async function handler(event) {
   try {
     if (event.httpMethod !== "POST") return methodNotAllowed(["POST"]);
     const user = await requireUser(event);
+    await rateLimit("ugsToken", user.id);
     const projectId = env("UGS_PROJECT_ID");
     const environmentId = env("UGS_ENVIRONMENT_ID");
     const environmentName = process.env.UGS_ENVIRONMENT_NAME || "production";

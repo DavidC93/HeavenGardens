@@ -1,5 +1,6 @@
 import { db } from "./_lib/db.mjs";
 import { createSession, normalizeEmail, passwordHash, sessionCookie } from "./_lib/auth.mjs";
+import { clientIp, rateLimit } from "./_lib/ratelimit.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 
 export async function handler(event) {
@@ -15,6 +16,7 @@ export async function handler(event) {
     if (password.length < 8) return json(400, { error: "weak_password", message: "Password must be at least 8 characters." });
 
     const sql = db();
+    await rateLimit("register", clientIp(event), sql);
     const userCountRows = await sql`select count(*)::int as count from app_users`;
     const role = userCountRows[0]?.count === 0 ? "admin" : "user";
 

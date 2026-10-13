@@ -26,6 +26,16 @@ export const ECONOMY = {
   // a game must last this many turns to earn anything, and AI rewards are at least this far apart
   rewardMinTurns: 6,
   aiRewardCooldownSeconds: 45,
+  // golden apples for real money (Google Play one-time products; the store shows its own local prices,
+  // usd is only a fallback label)
+  appleProducts: [
+    { id: "apples_60", apples: 60, usd: "0.99" },
+    { id: "apples_330", apples: 330, usd: "4.99" },
+    { id: "apples_700", apples: 700, usd: "9.99" },
+    { id: "apples_1500", apples: 1500, usd: "19.99" }
+  ],
+  // "watch an ad to double the reward": at most this many per player in 24 hours
+  adDoubleDailyLimit: 10,
   packs: [
     {
       id: "basic", cost: { coins: 1000 },
@@ -323,6 +333,110 @@ export async function rewardMatch(sql, userId, body) {
   return { coins };
 }
 
+// ---------------------------------------------------------------- golden apples for money
+
+/**
+ * Credits a store purchase that Google has confirmed. The purchase token is the key, so retries and replays pay
+ * nothing more; a token already used by another account is refused.
+ */
+export async function grantPurchase(sql, userId, { productId, purchaseToken, orderId = null, store = "google_play" }) {
+  const product = ECONOMY.appleProducts.find(p => p.id === productId);
+  if (!product) throw httpError(400, "unknown_product");
+  const done = await sql`
+    with p as (
+      insert into iap_purchases (purchase_token, user_id, store, product_id, order_id, apples)
+      values (${purchaseToken}, ${userId}, ${store}, ${productId}, ${orderId}, ${product.apples})
+      on conflict (purchase_token) do nothing
+      returning apples
+    ),
+    w as (
+      update player_wallets set apples = apples + (select apples from p), updated_at = now()
+      where user_id = ${userId} and exists (select 1 from p)
+      returning apples
+    ),
+    e as (
+      insert into economy_events (user_id, kind, detail)
+      select ${userId}, 'purchase', ${JSON.stringify({ productId, orderId, apples: product.apples, store })}::jsonb from p
+      returning 1
+    )
+    select apples from w
+  `;
+  if (done.length > 0) return { apples: product.apples, granted: true };
+  const [existing] = await sql`select user_id from iap_purchases where purchase_token = ${purchaseToken}`;
+  if (existing && existing.user_id !== userId) throw httpError(409, "purchase_used");
+  return { apples: product.apples, granted: false };
+}
+
+// ---------------------------------------------------------------- ad: double a match reward
+
+async function adsToday(sql, userId) {
+  const [row] = await sql`
+    select count(*)::int as n from ad_rewards where user_id = ${userId} and claimed_at > now() - interval '24 hours'
+  `;
+  return row.n;
+}
+
+/**
+ * Before showing the ad: checks the match paid a reward that has not been doubled and the daily limit, and returns
+ * the nonce the app passes to AdMob as custom data (it comes back in the signed callback).
+ */
+export async function startAdDouble(sql, userId, matchKey) {
+  const key = String(matchKey || "").slice(0, 80);
+  const [reward] = await sql`select coins from match_rewards where user_id = ${userId} and match_key = ${key}`;
+  if (!reward || Number(reward.coins) <= 0) throw httpError(400, "no_reward");
+  if (await adsToday(sql, userId) >= ECONOMY.adDoubleDailyLimit) throw httpError(429, "ad_limit");
+  const nonce = crypto.randomBytes(18).toString("base64url");
+  const rows = await sql`
+    insert into ad_rewards (nonce, user_id, match_key, coins)
+    values (${nonce}, ${userId}, ${key}, ${Number(reward.coins)})
+    on conflict (user_id, match_key) do update set nonce = ad_rewards.nonce
+    returning nonce, coins, claimed_at, verified_at
+  `;
+  const r = rows[0];
+  if (r.claimed_at) throw httpError(409, "already_doubled");
+  // the ad was already watched for this match but not claimed: keep that nonce
+  return { nonce: r.nonce, coins: Number(r.coins), verified: !!r.verified_at };
+}
+
+/** AdMob's signed callback said the ad was watched to the end. */
+export async function verifyAdDouble(sql, nonce, userId, transactionId) {
+  const rows = await sql`
+    update ad_rewards set verified_at = now(), transaction_id = ${transactionId}
+    where nonce = ${String(nonce || "")} and user_id::text = ${String(userId || "")} and verified_at is null
+    returning nonce
+  `;
+  return rows.length > 0;
+}
+
+/** After the ad: pays the extra coins once, if AdMob has confirmed it (409 ad_not_verified: try again shortly). */
+export async function claimAdDouble(sql, userId, nonce) {
+  const [row] = await sql`select verified_at, claimed_at from ad_rewards where nonce = ${String(nonce || "")} and user_id = ${userId}`;
+  if (!row) throw httpError(400, "unknown_ad");
+  if (row.claimed_at) throw httpError(409, "already_doubled");
+  if (!row.verified_at) throw httpError(409, "ad_not_verified");
+  if (await adsToday(sql, userId) >= ECONOMY.adDoubleDailyLimit) throw httpError(429, "ad_limit");
+  const done = await sql`
+    with a as (
+      update ad_rewards set claimed_at = now()
+      where nonce = ${nonce} and user_id = ${userId} and verified_at is not null and claimed_at is null
+      returning coins, match_key
+    ),
+    w as (
+      update player_wallets set coins = coins + (select coins from a), updated_at = now()
+      where user_id = ${userId} and exists (select 1 from a)
+      returning coins
+    ),
+    e as (
+      insert into economy_events (user_id, kind, detail)
+      select ${userId}, 'ad_double', jsonb_build_object('matchKey', a.match_key, 'coins', a.coins) from a
+      returning 1
+    )
+    select coins from a
+  `;
+  if (done.length === 0) throw httpError(409, "already_doubled");
+  return { coins: Number(done[0].coins) };
+}
+
 // ---------------------------------------------------------------- admin
 
 export async function adminGrant(sql, userId, body) {
@@ -352,7 +466,9 @@ export function publicConfig() {
     starter: ECONOMY.starter,
     rewards: ECONOMY.rewards,
     rewardMinTurns: ECONOMY.rewardMinTurns,
-    packs: ECONOMY.packs
+    packs: ECONOMY.packs,
+    appleProducts: ECONOMY.appleProducts,
+    adDoubleDailyLimit: ECONOMY.adDoubleDailyLimit
   };
 }
 

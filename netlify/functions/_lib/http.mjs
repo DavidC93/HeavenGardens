@@ -30,6 +30,7 @@ export function handleError(error) {
   const statusCode = error.statusCode || 500;
   const code = error.publicCode || (statusCode >= 500 ? "server_error" : "request_error");
   if (statusCode >= 500) console.error(error);
-  return json(statusCode, { error: code, message: statusCode >= 500 ? "Server error" : error.message });
+  const headers = error.retryAfter ? { "retry-after": String(error.retryAfter) } : {};
+  return json(statusCode, { error: code, message: statusCode >= 500 ? "Server error" : error.message }, headers);
 }
 

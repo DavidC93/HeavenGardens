@@ -1,5 +1,6 @@
 import { db } from "./_lib/db.mjs";
 import { createSession, normalizeEmail, sessionCookie, verifyPassword } from "./_lib/auth.mjs";
+import { clientIp, rateLimit } from "./_lib/ratelimit.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 
 export async function handler(event) {
@@ -10,6 +11,8 @@ export async function handler(event) {
     const email = normalizeEmail(body.email);
     const password = String(body.password || "");
     const sql = db();
+    await rateLimit("login", clientIp(event), sql);
+    await rateLimit("loginEmail", email, sql);
     const rows = await sql`
       select id, email, display_name, password_hash, role
       from app_users

@@ -1,5 +1,6 @@
 import { db } from "./_lib/db.mjs";
 import { normalizeEmail, randomToken, sha256 } from "./_lib/auth.mjs";
+import { clientIp, rateLimit } from "./_lib/ratelimit.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 
 async function sendResetEmail({ email, resetUrl }) {
@@ -34,6 +35,8 @@ export async function handler(event) {
     const body = await readJson(event);
     const email = normalizeEmail(body.email);
     const sql = db();
+    await rateLimit("resetRequest", clientIp(event), sql);
+    await rateLimit("resetEmail", email, sql);
     const rows = await sql`select id, email from app_users where email = ${email} limit 1`;
     const user = rows[0];
     if (!user) return json(200, { ok: true });
@@ -48,7 +51,8 @@ export async function handler(event) {
     const origin = event.headers.origin || process.env.SITE_URL || "https://heaven-gardens.netlify.app";
     const resetUrl = `${origin}/legacy-card-battle.html?resetToken=${encodeURIComponent(token)}`;
     const emailSent = await sendResetEmail({ email: user.email, resetUrl });
-    const devFallback = !emailSent && !process.env.RESEND_API_KEY ? { resetUrl } : {};
+    // only in local development (netlify dev): returning the link anywhere else would let anyone reset any account
+    const devFallback = !emailSent && process.env.CONTEXT === "dev" ? { resetUrl } : {};
 
     return json(200, { ok: true, emailSent, ...devFallback });
   } catch (error) {

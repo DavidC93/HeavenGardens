@@ -1,8 +1,11 @@
 import { currentUser, requireUser } from "./_lib/auth.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
+import { clientIp, rateLimit } from "./_lib/ratelimit.mjs";
 import {
-  adminGrant, craft, db, disenchant, ensureStarter, httpError, loadState, openPack, publicConfig, rewardMatch
+  adminGrant, claimAdDouble, craft, db, disenchant, ensureStarter, grantPurchase, httpError, loadState, openPack, publicConfig,
+  rewardMatch, startAdDouble
 } from "./_lib/economy.mjs";
+import { verifyPlayPurchase } from "./_lib/google.mjs";
 
 /**
  * Economy API.
@@ -10,6 +13,8 @@ import {
  *   GET  /economy                  signed in: wallet, collection and shards (grants the starter set on first visit)
  *   POST /economy {action: ...}    openPack {pack} | disenchant {cardId, amount} | craft {cardId}
  *                                  | reward {mode, result, turns, matchKey} | grant {coins, apples} (admin)
+ *                                  | purchase {productId, purchaseToken}   (checked with Google, paid once)
+ *                                  | adStart {matchKey} -> nonce | adClaim {nonce}   (double a match reward)
  * Every response to a signed-in request carries the new state, so the app always shows the server's numbers.
  */
 export async function handler(event) {
@@ -26,6 +31,7 @@ export async function handler(event) {
       return json(200, { config: publicConfig(), state: await loadState(sql, user.id) });
     }
     if (event.httpMethod !== "POST") return methodNotAllowed(["GET", "POST"]);
+    await rateLimit("economy", user.id, sql);
 
     const body = await readJson(event);
     let result = {};
@@ -41,6 +47,19 @@ export async function handler(event) {
         break;
       case "reward":
         result = await rewardMatch(sql, user.id, body);
+        break;
+      case "purchase": {
+        const productId = String(body.productId || "");
+        const purchaseToken = String(body.purchaseToken || "");
+        const { orderId } = await verifyPlayPurchase(productId, purchaseToken);
+        result = await grantPurchase(sql, user.id, { productId, purchaseToken, orderId });
+        break;
+      }
+      case "adStart":
+        result = await startAdDouble(sql, user.id, body.matchKey);
+        break;
+      case "adClaim":
+        result = await claimAdDouble(sql, user.id, body.nonce);
         break;
       case "grant": {
         const me = await currentUser(event);
