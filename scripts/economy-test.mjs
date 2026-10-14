@@ -27,6 +27,14 @@ function check(ok, what) {
   check(res.every(r => r.shards === ECONOMY.shardsPerCard), "cards owned 4 times (gods: once) become shards");
   const up = drawPack({ slots: [{ count: 1, odds: { diamond: 100 } }] }, [{ id: "b", rarity: "bronze" }], {});
   check(up.length === 1 && up[0].rarity === "bronze", "a rarity with no cards falls back to a lower one");
+  // never the same card twice in one pack, even when the rolled rarity runs out of cards
+  const small = [{ id: "b1", rarity: "bronze" }, { id: "b2", rarity: "bronze" }, { id: "s1", rarity: "silver" }, { id: "g1", rarity: "gold" }];
+  let unique = true;
+  for (let n = 0; n < 300; n++) {
+    const res = drawPack({ slots: [{ count: 4, odds: { bronze: 100 } }] }, small, {});
+    if (new Set(res.map(r => r.cardId)).size !== res.length || res.length !== 4) unique = false;
+  }
+  check(unique, "a pack never holds the same card twice (bronze ran out: silver and gold fill in)");
 }
 
 // ---- a throwaway test user with a session

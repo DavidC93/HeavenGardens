@@ -147,22 +147,29 @@ export function rollRarity(odds, rand = secureRandom) {
 
 /**
  * Draws a pack. Returns the cards drawn, and for each whether it was added to the collection or turned into shards
- * (a card already owned the maximum number of times).
+ * (a card already owned the maximum number of times). A pack never holds the same card twice.
  */
 export function drawPack(pack, catalog, owned, rand = secureRandom) {
   const byRarity = Object.fromEntries(RARITIES.map(r => [r, catalog.filter(c => c.rarity === r)]));
   const counts = Object.fromEntries(Object.entries(owned).map(([id, v]) => [id, v.count]));
+  const inPack = new Set();
+  const available = r => byRarity[r].filter(c => !inPack.has(c.id));
   const results = [];
   for (const slot of pack.slots) {
     for (let i = 0; i < slot.count; i++) {
-      let rarity = rollRarity(slot.odds, rand);
-      // if a rarity has no cards at all, fall back to the nearest lower one that does
-      let idx = RARITIES.indexOf(rarity);
-      while (byRarity[RARITIES[idx]].length === 0 && idx > 0) idx--;
-      rarity = RARITIES[idx];
-      const pool = byRarity[rarity];
+      const rolled = RARITIES.indexOf(rollRarity(slot.odds, rand));
+      // a rarity with no card left for this pack falls back to the nearest lower one, then to a higher one
+      let idx = rolled;
+      while (idx > 0 && available(RARITIES[idx]).length === 0) idx--;
+      if (available(RARITIES[idx]).length === 0) {
+        idx = rolled;
+        while (idx < RARITIES.length - 1 && available(RARITIES[idx]).length === 0) idx++;
+      }
+      const rarity = RARITIES[idx];
+      const pool = available(rarity);
       if (pool.length === 0) continue;
       const card = pool[Math.floor(rand() * pool.length)];
+      inPack.add(card.id);
       const have = counts[card.id] || 0;
       if (have >= maxCopiesOf(card)) {
         results.push({ cardId: card.id, rarity, shards: ECONOMY.shardsPerCard });
