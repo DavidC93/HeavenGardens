@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heaven Gardens – Delete Account</title>
+<style>
+  :root { --bg: #0d0b1e; --panel: #17142e; --text: #e9e5ff; --muted: #a9a3cc; --gold: #ffd27a; --red: #ff6b7a; --line: rgba(255, 210, 122, 0.25); }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { color: var(--gold); font-size: 26px; margin: 0 0 4px; }
+  h2 { color: var(--gold); font-size: 18px; margin: 22px 0 6px; }
+  a { color: var(--gold); }
+  .muted { color: var(--muted); font-size: 14px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px 20px 20px; margin-top: 18px; }
+  label { display: block; margin-top: 10px; color: var(--muted); font-size: 14px; }
+  input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #0f0d22; color: var(--text); font-size: 16px; }
+  button { margin-top: 14px; padding: 11px 18px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .danger { background: var(--red); color: #2a0008; }
+  .secondary { background: #2b2752; color: var(--text); }
+  #status { margin-top: 12px; min-height: 1.5em; }
+  .error { color: var(--red); }
+  .ok { color: #7dffb0; }
+  [dir="rtl"] { text-align: right; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Delete your Heaven Gardens account</h1>
+  <p class="muted"><a href="#he">עברית</a> · <a href="/privacy.html">Privacy policy</a></p>
+
+  <section>
+    <p>Deleting your account removes, immediately and permanently: your account and sign-in methods, coins, golden apples, card collection, shards, decks, match history and rewards. Golden apples you bought are lost and cannot be refunded by us; Google Play's refund rules apply to purchases. Records of purchases are kept without your account, as required for payment records.</p>
+
+    <h2>Signed in with Google Play Games</h2>
+    <p>Open the game and go to <b>Main menu → Account → Delete account</b>. If you cannot open the game, email <a href="mailto:contact.imrigames@gmail.com?subject=Delete%20my%20Heaven%20Gardens%20account">contact.imrigames@gmail.com</a> from the Google account you play with, and we will delete it within 30 days.</p>
+
+    <h2>Signed in with email</h2>
+    <p>Delete it in the game as above, or here:</p>
+    <form id="form" autocomplete="on">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit" class="secondary" id="signin">Sign in</button>
+    </form>
+    <div id="confirm" class="hidden">
+      <p>Signed in as <b id="who"></b>. This cannot be undone.</p>
+      <button type="button" class="danger" id="delete">Delete my account permanently</button>
+    </div>
+    <p id="status" role="status"></p>
+  </section>
+
+  <section id="he" dir="rtl" lang="he">
+    <h2>מחיקת החשבון בגני השמיים</h2>
+    <p>מחיקת החשבון מסירה מיד ולצמיתות את החשבון ואת דרכי ההתחברות, המטבעות, התפוחים המוזהבים, אוסף הקלפים, החלקיקים, החפיסות, היסטוריית המשחקים והפרסים. תפוחים שנקנו אובדים ואיננו יכולים להחזיר עליהם כסף; על רכישות חלים כללי ההחזרים של Google Play. רישומי הרכישות נשמרים בלי קשר לחשבון, כנדרש לרישומי תשלומים.</p>
+    <p><b>התחברת עם Google Play Games:</b> במשחק, תפריט ראשי ← חשבון ← מחיקת החשבון. אם אין לך גישה למשחק, שלח מייל אל <a href="mailto:contact.imrigames@gmail.com?subject=Delete%20my%20Heaven%20Gardens%20account">contact.imrigames@gmail.com</a> מחשבון הגוגל שאיתו אתה משחק, והחשבון יימחק תוך 30 יום.</p>
+    <p><b>התחברת עם אימייל:</b> במשחק כמו למעלה, או בטופס שבדף הזה.</p>
+  </section>
+</main>
+<script>
+  const api = path => `/.netlify/functions/${path}`;
+  const status = document.getElementById("status");
+  const say = (text, cls) => { status.textContent = text; status.className = cls || ""; };
+  async function post(path, body) {
+    const res = await fetch(api(path), { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    let data = {};
+    try { data = await res.json(); } catch {}
+    return { ok: res.ok, status: res.status, data };
+  }
+  document.getElementById("form").addEventListener("submit", async e => {
+    e.preventDefault();
+    say("Signing in…");
+    const r = await post("auth-login", { email: document.getElementById("email").value, password: document.getElementById("password").value });
+    if (!r.ok) return say(r.status === 429 ? "Too many attempts. Try again later." : "Wrong email or password.", "error");
+    document.getElementById("who").textContent = r.data.user?.email || "";
+    document.getElementById("form").classList.add("hidden");
+    document.getElementById("confirm").classList.remove("hidden");
+    say("");
+  });
+  document.getElementById("delete").addEventListener("click", async () => {
+    if (!confirm("Delete your Heaven Gardens account and all its data permanently?")) return;
+    say("Deleting…");
+    const r = await post("account-delete", { confirm: "DELETE" });
+    if (!r.ok) return say("Could not delete the account. Try again, or contact us.", "error");
+    document.getElementById("confirm").classList.add("hidden");
+    say("Your account has been deleted.", "ok");
+  });
+</script>
+</body>
+</html>

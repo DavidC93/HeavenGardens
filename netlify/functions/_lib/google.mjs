@@ -4,9 +4,9 @@ import crypto from "node:crypto";
 // Secrets live only in Netlify environment variables (set by the owner in the Netlify UI, never in the repo):
 //   GOOGLE_PGS_CLIENT_ID, GOOGLE_PGS_CLIENT_SECRET   web OAuth client of the Play Games Services project
 //   GOOGLE_PLAY_SERVICE_ACCOUNT                      service account key (JSON) with access to the Play Developer API
-//   ANDROID_PACKAGE_NAME                             optional, defaults to com.heavengardens.cardbattle
+//   ANDROID_PACKAGE_NAME                             optional, defaults to com.imrigames.heavengardens
 
-export const PACKAGE_NAME = () => process.env.ANDROID_PACKAGE_NAME || "com.heavengardens.cardbattle";
+export const PACKAGE_NAME = () => process.env.ANDROID_PACKAGE_NAME || "com.imrigames.heavengardens";
 
 function failure(statusCode, code, message) {
   const err = new Error(message || code);
