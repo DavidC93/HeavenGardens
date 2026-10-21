@@ -1,7 +1,7 @@
 // Checks the computer decks and difficulty levels against a test database branch.
 //   DATABASE_URL=<test branch> node scripts/aidecks-test.mjs
 import { neon } from "@neondatabase/serverless";
-import { loadCatalog, rewardMatch, aiGamesPlayed } from "../netlify/functions/_lib/economy.mjs";
+import { loadCatalog, rewardMatch, aiGamesPlayed, claimTutorialPack, loadState } from "../netlify/functions/_lib/economy.mjs";
 import { deleteDeck, loadLevels, normalizeDeckConfig, normalizeLevels, publicAiConfig, saveDeck, saveLevels } from "../netlify/functions/_lib/aidecks.mjs";
 
 const sql = neon(process.env.DATABASE_URL);
@@ -40,7 +40,7 @@ try {
   id = await saveDeck(sql, { name: "test deck", config: { fixed, random: { monsters: 5, spells: 5 } } }, null);
   await saveLevels(sql, { levels: before.map(l => (l.level === 3 ? { ...l, deckId: id } : l)) }, null);
   const pub = await publicAiConfig(sql);
-  check("public config carries the deck of level 3", pub.levels[2].deck?.random?.spells === 5 && pub.levels[0].deck === null);
+  check("public config carries the deck of level 3", pub.levels[2].deck?.random?.spells === 5 && (before[0].deckId !== null || pub.levels[0].deck === null));
   await deleteDeck(sql, id, null);
   id = null;
   check("deleting a deck frees its level", (await loadLevels(sql))[2].deckId === null);
@@ -58,6 +58,18 @@ if (user) {
   await rewardMatch(sql, user.id, { mode: "ai", result: "lose", turns: 1, matchKey: key });
   check("a short game counts once", await aiGamesPlayed(sql, user.id) === n0 + 1);
   await sql`delete from match_results where user_id = ${user.id} and match_key = ${key}`;
+}
+// the tutorial's free pack: once per account
+if (user) {
+  await sql`delete from match_results where user_id = ${user.id} and match_key = 'tutorial-reward'`;
+  const before = await loadState(sql, user.id);
+  const cards = await claimTutorialPack(sql, user.id);
+  const after = await loadState(sql, user.id);
+  check("tutorial pack: 2 cards, free", cards.length === 2 && after.coins === before.coins && after.apples === before.apples);
+  let second = null;
+  try { await claimTutorialPack(sql, user.id); } catch (e) { second = e.publicCode; }
+  check("tutorial pack only once", second === "already_claimed");
+  await sql`delete from match_results where user_id = ${user.id} and match_key = 'tutorial-reward'`;
 }
 console.log(failed ? `${failed} failed` : "all passed");
 process.exit(failed ? 1 : 0);

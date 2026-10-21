@@ -238,6 +238,48 @@ export async function openPack(sql, userId, packId) {
   return results;
 }
 
+/**
+ * The tutorial's reward: one basic pack, free, once per account. The claim is recorded in match_results under a fixed
+ * key in the same statement that adds the cards, so a repeated or concurrent claim adds nothing.
+ */
+export async function claimTutorialPack(sql, userId) {
+  const pack = ECONOMY.packs.find(p => p.id === "basic");
+  const catalog = await loadCatalog(sql);
+  const state = await loadState(sql, userId);
+  const results = drawPack(pack, catalog, state.cards);
+  const { cards, shards } = summarize(results);
+  const maxById = Object.fromEntries(catalog.map(c => [c.id, maxCopiesOf(c)]));
+  const cardRows = cards.map(c => ({ ...c, max: maxById[c.card_id] }));
+  const done = await sql`
+    with w as (
+      insert into match_results (user_id, match_key, mode, result, turns)
+      values (${userId}, 'tutorial-reward', 'tutorial', 'win', 0)
+      on conflict (user_id, match_key) do nothing
+      returning 1
+    ),
+    c as (
+      insert into player_cards (user_id, card_id, count)
+      select ${userId}, x.card_id, least(x.n, x.max) from w, jsonb_to_recordset(${JSON.stringify(cardRows)}::jsonb) as x(card_id text, n int, max int)
+      on conflict (user_id, card_id) do update set count = least(player_cards.count + excluded.count, ${ECONOMY.maxCopies}), updated_at = now()
+      returning 1
+    ),
+    s as (
+      insert into player_shards (user_id, rarity, amount)
+      select ${userId}, x.rarity, x.n from w, jsonb_to_recordset(${JSON.stringify(shards)}::jsonb) as x(rarity text, n int)
+      on conflict (user_id, rarity) do update set amount = player_shards.amount + excluded.amount
+      returning 1
+    ),
+    e as (
+      insert into economy_events (user_id, kind, detail)
+      select ${userId}, 'tutorial', ${JSON.stringify({ pack: "basic", results })}::jsonb from w
+      returning 1
+    )
+    select 1 as ok from w
+  `;
+  if (done.length === 0) throw httpError(409, "already_claimed");
+  return results;
+}
+
 // ---------------------------------------------------------------- disenchant / craft
 
 export async function disenchant(sql, userId, cardId, amount) {
