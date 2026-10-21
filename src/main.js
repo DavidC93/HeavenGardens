@@ -5,8 +5,10 @@ import { t } from "./i18n.js";
 import { loadRules } from "./rules.js";
 import { loadCards, renderCardList, renderCardEditor, isDirty, clearDirty } from "./cards.js";
 import { renderPlayerList, renderPlayer } from "./players.js";
+import { renderSettings } from "./settings.js";
+import { renderAi, renderAiDeck } from "./ai.js";
 
-// Heaven Gardens back office: cards (create / edit) and players (currency, cards and shards). Admins only.
+// Heaven Gardens back office: cards (create / edit), players (currency, cards and shards), the computer's decks and levels, and app versions. Admins only.
 const app = document.getElementById("app");
 let me = null;
 let view;
@@ -53,7 +55,9 @@ function renderShell() {
   view = h("main", { class: "view" });
   const nav = h("nav", { class: "tabs" },
     h("a", { href: "#/cards", "data-tab": "cards" }, icon("cards"), t("cards")),
-    h("a", { href: "#/players", "data-tab": "players" }, icon("users"), t("players")));
+    h("a", { href: "#/players", "data-tab": "players" }, icon("users"), t("players")),
+    h("a", { href: "#/ai", "data-tab": "ai" }, icon("sword"), t("ai")),
+    h("a", { href: "#/settings", "data-tab": "settings" }, icon("refresh"), t("settings")));
   clear(app).append(
     h("header", { class: "topbar" },
       h("div", { class: "brand" }, t("appTitle")),
@@ -78,7 +82,9 @@ function route() {
   const [, section, id] = hash.split("/");
   for (const a of document.querySelectorAll("[data-tab]")) a.classList.toggle("active", a.dataset.tab === (section || "cards"));
   window.scrollTo(0, 0);
-  if (section === "players") id ? renderPlayer(view, decodeURIComponent(id)) : renderPlayerList(view);
+  if (section === "settings") renderSettings(view);
+  else if (section === "ai") id ? renderAiDeck(view, decodeURIComponent(id)) : renderAi(view);
+  else if (section === "players") id ? renderPlayer(view, decodeURIComponent(id)) : renderPlayerList(view);
   else if (id) renderCardEditor(view, decodeURIComponent(id), savedId => { location.hash = `#/cards/${encodeURIComponent(savedId)}`; if (location.hash === currentHash) route(); });
   else renderCardList(view);
   currentHash = location.hash;

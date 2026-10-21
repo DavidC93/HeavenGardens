@@ -83,7 +83,7 @@ function isGod(row) {
 
 export async function loadCatalog(sql) {
   const rows = await sql`select id, kind, payload from cards where active = true order by id`;
-  return rows.map(row => ({ id: row.id, rarity: cardRarity(row), god: isGod(row) }));
+  return rows.map(row => ({ id: row.id, kind: row.kind, rarity: cardRarity(row), god: isGod(row) }));
 }
 
 export function maxCopiesOf(card) {
@@ -93,10 +93,11 @@ export function maxCopiesOf(card) {
 // ---------------------------------------------------------------- state
 
 export async function loadState(sql, userId) {
-  const [wallets, cards, shards] = await Promise.all([
+  const [wallets, cards, shards, aiGames] = await Promise.all([
     sql`select coins, apples, starter_granted_at from player_wallets where user_id = ${userId}`,
     sql`select card_id, count, locked from player_cards where user_id = ${userId} and count > 0 order by card_id`,
-    sql`select rarity, amount from player_shards where user_id = ${userId}`
+    sql`select rarity, amount from player_shards where user_id = ${userId}`,
+    aiGamesPlayed(sql, userId)
   ]);
   const wallet = wallets[0];
   return {
@@ -104,7 +105,8 @@ export async function loadState(sql, userId) {
     coins: wallet ? Number(wallet.coins) : 0,
     apples: wallet ? Number(wallet.apples) : 0,
     cards: Object.fromEntries(cards.map(r => [r.card_id, { count: Number(r.count), locked: Number(r.locked) }])),
-    shards: Object.fromEntries(RARITIES.map(r => [r, Number(shards.find(s => s.rarity === r)?.amount || 0)]))
+    shards: Object.fromEntries(RARITIES.map(r => [r, Number(shards.find(s => s.rarity === r)?.amount || 0)])),
+    aiGames
   };
 }
 
@@ -301,12 +303,32 @@ export async function craft(sql, userId, cardId) {
 
 // ---------------------------------------------------------------- match rewards
 
+/** Logs a finished game once per match key. Works on a database without the table (before migration 006). */
+async function recordMatch(sql, userId, matchKey, mode, result, turns) {
+  try {
+    await sql`
+      insert into match_results (user_id, match_key, mode, result, turns)
+      values (${userId}, ${matchKey}, ${mode}, ${result}, ${turns})
+      on conflict (user_id, match_key) do nothing
+    `;
+  } catch (e) { console.warn("match_results unavailable", e.message); }
+}
+
+export async function aiGamesPlayed(sql, userId) {
+  try {
+    const [row] = await sql`select count(*)::int as n from match_results where user_id = ${userId} and mode = 'ai'`;
+    return row?.n || 0;
+  } catch { return 0; }
+}
+
 export async function rewardMatch(sql, userId, body) {
   const mode = body.mode === "online" ? "online" : "ai";
   const result = body.result === "win" ? "win" : "lose";
   const turns = Math.floor(Number(body.turns) || 0);
   const matchKey = String(body.matchKey || "").slice(0, 80);
   if (!/^[A-Za-z0-9_-]{8,80}$/.test(matchKey)) throw httpError(400, "bad_match_key");
+  // every finished game counts (the computer's difficulty grows with them), rewarded or not
+  await recordMatch(sql, userId, matchKey, mode, result, turns);
   if (turns < ECONOMY.rewardMinTurns) return { coins: 0, reason: "too_short" };
   if (mode === "ai") {
     const recent = await sql`

@@ -16,6 +16,7 @@ export const LIMITS = {
   clientError: { limit: 30, windowSeconds: 3600 },   // per IP
   ugsToken: { limit: 30, windowSeconds: 600 },       // per user
   accountDelete: { limit: 5, windowSeconds: 3600 },  // per user
+  appStatus: { limit: 60, windowSeconds: 600 },      // per IP
   adCallback: { limit: 120, windowSeconds: 60 },     // per IP (AdMob's servers)
 };
 

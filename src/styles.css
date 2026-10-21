@@ -233,3 +233,31 @@ select.input { cursor: pointer; }
 .toast.show { opacity: 1; transform: none; }
 .toast.ok { border-color: color-mix(in srgb, var(--ok) 60%, transparent); }
 .toast.error { border-color: var(--red); }
+
+/* ---------------------------------------------------------------- computer decks and levels */
+.ai-levels { width: 100%; border-collapse: collapse; margin: 6px 0 12px; }
+.ai-levels td { padding: 6px 8px; border-bottom: 1px solid var(--line2); vertical-align: middle; }
+.ai-levels td:first-child { width: 80px; white-space: nowrap; }
+.games-cell { display: flex; align-items: center; gap: 8px; }
+.games-cell .input { width: 90px; }
+.ai-decks { display: flex; flex-direction: column; gap: 8px; }
+.ai-deck-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--line2); }
+.ai-deck-row:hover { border-color: var(--line); }
+.ai-summary { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-weight: 700; }
+.ai-summary .ok { color: var(--ok); }
+.ai-summary .warn { color: var(--warn); }
+.ai-random { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.ai-random + .field, .ai-random ~ .field { margin-bottom: 10px; }
+.ai-chosen { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.ai-chosen-row { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 10px; background: var(--bg2); border-inline-start: 3px solid var(--rarity); }
+.ai-thumb { width: 34px; height: 34px; border-radius: 8px; background: center / cover no-repeat var(--panel2); flex: none; }
+.ai-count { min-width: 22px; text-align: center; }
+.ai-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.ai-pool-card { display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 10px; border: 1px solid var(--line2); background: var(--bg2); cursor: pointer; text-align: center; }
+.ai-pool-card:hover { border-color: var(--rarity); }
+.ai-pool-card.picked { box-shadow: 0 0 0 2px var(--rarity); }
+.ai-pool-card:disabled { opacity: 0.45; cursor: default; }
+.ai-pool-art { position: relative; aspect-ratio: 1; border-radius: 8px; background: center / cover no-repeat var(--panel2); }
+.ai-pool-count { position: absolute; top: 4px; inset-inline-end: 4px; min-width: 22px; padding: 0 6px; border-radius: 999px; background: var(--gold); color: #2b1a00; font-weight: 800; font-size: 13px; }
+.ai-pool-name { font-size: 12px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 560px) { .ai-random { grid-template-columns: 1fr; } }

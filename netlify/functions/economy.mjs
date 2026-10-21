@@ -6,6 +6,7 @@ import {
   rewardMatch, startAdDouble
 } from "./_lib/economy.mjs";
 import { verifyPlayPurchase } from "./_lib/google.mjs";
+import { requireSupportedClient } from "./_lib/appconfig.mjs";
 
 /**
  * Economy API.
@@ -25,6 +26,7 @@ export async function handler(event) {
 
     const user = await requireUser(event);
     const sql = db();
+    await requireSupportedClient(event, sql);
     await ensureStarter(sql, user.id);
 
     if (event.httpMethod === "GET") {
