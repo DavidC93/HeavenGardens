@@ -6,7 +6,7 @@ import { ECONOMY, RARITIES, ensureStarter, httpError, loadCatalog, loadState, ma
 
 /**
  * Back office: players (admins only).
- *   GET  ?q=text            search by email, name or id (newest first, 50 at most)
+ *   GET  ?q=text            search by email, name, id or the in-game player id "HG-XXXXXXXXXX" (newest first, 50 at most)
  *   GET  ?id=<user id>      the player: account, wallet, collection, shards, recent history
  *   POST { action: "grant", userId, coins, apples, cards: {id: n}, shards: {rarity: n}, note }
  *        adds (or, with negative numbers, removes) currency, cards and shards in one atomic step; logged with the admin
@@ -24,10 +24,14 @@ export async function handler(event) {
       if (id) return json(200, await playerDetail(sql, id));
       const q = String(event.queryStringParameters?.q || "").trim().slice(0, 100);
       const like = `%${q.replace(/[\\%_]/g, m => "\\" + m)}%`;
+      // the player id shown in the game is "HG-" + the first 10 hex digits of the account id
+      const code = q.replace(/^hg-?/i, "").replace(/-/g, "").toLowerCase();
+      const codePrefix = /^[0-9a-f]{6,32}$/.test(code) ? code + "%" : "";
       const rows = await sql`
         select u.id, u.email, u.display_name, u.role, u.created_at, w.coins, w.apples
         from app_users u left join player_wallets w on w.user_id = u.id
         where ${q} = '' or u.email ilike ${like} or u.display_name ilike ${like} or u.id::text = ${q}
+          or (${codePrefix} <> '' and replace(u.id::text, '-', '') like ${codePrefix})
         order by u.created_at desc
         limit 50
       `;

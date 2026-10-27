@@ -121,7 +121,8 @@ const he = {
   preview: "תצוגה מקדימה",
   version: v => `גרסה ${v}`,
 
-  searchPlayers: "חיפוש לפי אימייל, שם או מזהה…",
+  searchPlayers: "חיפוש לפי אימייל, שם או מזהה שחקן (HG-…)",
+  playerCode: "מזהה שחקן",
   noPlayers: "לא נמצאו שחקנים.",
   coins: "מטבעות",
   apples: "תפוחים מוזהבים",

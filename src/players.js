@@ -6,6 +6,9 @@ import { allCards, artUrl, kindOf } from "./cards.js";
 
 let lastQuery = "";
 
+/** The player id the game shows in Settings (players quote it when they contact us). */
+export const playerCode = id => "HG-" + String(id || "").replace(/-/g, "").slice(0, 10).toUpperCase();
+
 export function renderPlayerList(root) {
   clear(root);
   const list = h("div", { class: "player-list" });
@@ -25,7 +28,7 @@ export function renderPlayerList(root) {
       list.append(h("a", { class: "player-row", href: `#/players/${p.id}` },
         h("div", { class: "grow" },
           h("div", { class: "player-name" }, p.display_name || p.email || p.id, p.role === "admin" ? h("span", { class: "badge" }, t("roleAdmin")) : null),
-          h("div", { class: "muted small", dir: "ltr" }, p.email || p.id)),
+          h("div", { class: "muted small", dir: "ltr" }, playerCode(p.id), p.email ? " · " + p.email : "")),
         h("div", { class: "wallet" },
           h("span", { class: "coin" }, icon("coin", 14), fmt(p.coins)),
           h("span", { class: "apple" }, fmt(p.apples), " ", t("apples")))));
@@ -50,6 +53,9 @@ export async function renderPlayer(root, id) {
         h("div", { class: "kv" }, h("span", {}, t("email")), h("span", { dir: "ltr" }, player.email || "—")),
         h("div", { class: "kv" }, h("span", {}, t("signIn")), h("span", {}, [player.email ? t("email") : null, ...(player.providers || [])].filter(Boolean).join(", ") || "—")),
         h("div", { class: "kv" }, h("span", {}, t("joined")), h("span", {}, new Date(player.created_at).toLocaleDateString("he-IL"))),
+        h("div", { class: "kv" }, h("span", {}, t("playerCode")),
+          h("button", { type: "button", class: "btn ghost small", dir: "ltr", onclick: () => { navigator.clipboard?.writeText(playerCode(player.id)); toast(t("copied")); } },
+            icon("copy", 14), playerCode(player.id))),
         h("div", { class: "kv" }, h("span", {}, t("id")),
           h("button", { type: "button", class: "btn ghost small", dir: "ltr", onclick: () => { navigator.clipboard?.writeText(player.id); toast(t("copied")); } },
             icon("copy", 14), player.id.slice(0, 8) + "…"))),
