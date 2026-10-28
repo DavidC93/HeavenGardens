@@ -36,6 +36,8 @@ export const ECONOMY = {
   ],
   // "watch an ad to double the reward": at most this many per player in 24 hours
   adDoubleDailyLimit: 10,
+  // saved decks: this many free, and up to extraMax more slots for extraApples golden apples each
+  decks: { free: 10, extraMax: 10, extraApples: 50 },
   packs: [
     {
       id: "basic", cost: { coins: 1000 },
@@ -94,7 +96,7 @@ export function maxCopiesOf(card) {
 
 export async function loadState(sql, userId) {
   const [wallets, cards, shards, aiGames] = await Promise.all([
-    sql`select coins, apples, starter_granted_at from player_wallets where user_id = ${userId}`,
+    sql`select coins, apples, deck_slots, starter_granted_at from player_wallets where user_id = ${userId}`,
     sql`select card_id, count, locked from player_cards where user_id = ${userId} and count > 0 order by card_id`,
     sql`select rarity, amount from player_shards where user_id = ${userId}`,
     aiGamesPlayed(sql, userId)
@@ -104,6 +106,7 @@ export async function loadState(sql, userId) {
     initialized: !!wallet,
     coins: wallet ? Number(wallet.coins) : 0,
     apples: wallet ? Number(wallet.apples) : 0,
+    deckSlots: wallet ? Number(wallet.deck_slots || 0) : 0,
     cards: Object.fromEntries(cards.map(r => [r.card_id, { count: Number(r.count), locked: Number(r.locked) }])),
     shards: Object.fromEntries(RARITIES.map(r => [r, Number(shards.find(s => s.rarity === r)?.amount || 0)])),
     aiGames
@@ -519,6 +522,34 @@ export async function adminGrant(sql, userId, body) {
 
 // ---------------------------------------------------------------- decks
 
+/** How many decks a player may keep: the free ones plus the slots bought. */
+export function maxDecks(deckSlots) {
+  return ECONOMY.decks.free + Math.max(0, Math.min(ECONOMY.decks.extraMax, Number(deckSlots) || 0));
+}
+
+/** One more deck slot for golden apples (at most decks.extraMax in all). */
+export async function buyDeckSlot(sql, userId) {
+  const { extraMax, extraApples } = ECONOMY.decks;
+  const done = await sql`
+    with w as (
+      update player_wallets set apples = apples - ${extraApples}, deck_slots = deck_slots + 1, updated_at = now()
+      where user_id = ${userId} and apples >= ${extraApples} and deck_slots < ${extraMax}
+      returning deck_slots
+    ),
+    e as (
+      insert into economy_events (user_id, kind, detail)
+      select ${userId}, 'deck_slot', jsonb_build_object('apples', ${extraApples}::int, 'slots', w.deck_slots) from w
+      returning 1
+    )
+    select deck_slots from w
+  `;
+  if (done.length === 0) {
+    const [wallet] = await sql`select deck_slots from player_wallets where user_id = ${userId}`;
+    throw httpError(400, wallet && Number(wallet.deck_slots) >= extraMax ? "max_deck_slots" : "not_enough_currency");
+  }
+  return { deckSlots: Number(done[0].deck_slots) };
+}
+
 /** Card ids in a deck that the player does not own often enough (empty = the deck is fine). */
 export async function deckOwnershipProblems(sql, userId, counts) {
   await ensureStarter(sql, userId);
@@ -539,7 +570,8 @@ export function publicConfig() {
     rewardMinTurns: ECONOMY.rewardMinTurns,
     packs: ECONOMY.packs,
     appleProducts: ECONOMY.appleProducts,
-    adDoubleDailyLimit: ECONOMY.adDoubleDailyLimit
+    adDoubleDailyLimit: ECONOMY.adDoubleDailyLimit,
+    decks: ECONOMY.decks
   };
 }
 

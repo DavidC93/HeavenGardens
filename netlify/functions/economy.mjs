@@ -2,7 +2,7 @@ import { currentUser, requireUser } from "./_lib/auth.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 import { clientIp, rateLimit } from "./_lib/ratelimit.mjs";
 import {
-  adminGrant, claimAdDouble, claimTutorialPack, craft, db, disenchant, ensureStarter, grantPurchase, httpError, loadState, openPack, publicConfig,
+  adminGrant, buyDeckSlot, claimAdDouble, claimTutorialPack, craft, db, disenchant, ensureStarter, grantPurchase, httpError, loadState, openPack, publicConfig,
   rewardMatch, startAdDouble
 } from "./_lib/economy.mjs";
 import { verifyPlayPurchase } from "./_lib/google.mjs";
@@ -17,6 +17,7 @@ import { requireSupportedClient } from "./_lib/appconfig.mjs";
  *                                  | purchase {productId, purchaseToken}   (checked with Google, paid once)
  *                                  | adStart {matchKey} -> nonce | adClaim {nonce}   (double a match reward)
  *                                  | tutorialPack                     (the tutorial's free basic pack, once per account)
+ *                                  | buyDeckSlot                      (one more saved deck for golden apples)
  * Every response to a signed-in request carries the new state, so the app always shows the server's numbers.
  */
 export async function handler(event) {
@@ -41,6 +42,9 @@ export async function handler(event) {
     switch (body.action) {
       case "tutorialPack":
         result = { cards: await claimTutorialPack(sql, user.id) };
+        break;
+      case "buyDeckSlot":
+        result = await buyDeckSlot(sql, user.id);
         break;
       case "openPack":
         result = { cards: await openPack(sql, user.id, String(body.pack || "")) };
