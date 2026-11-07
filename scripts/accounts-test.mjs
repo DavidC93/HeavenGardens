@@ -109,17 +109,17 @@ try {
     let purchaseState = 0;
     const fake = async url => {
       if (url.startsWith("https://oauth2.googleapis.com/token")) return Response.json({ access_token: "sa", expires_in: 3600 });
-      if (url.includes("/purchases/products/apples_60/tokens/")) return Response.json({ purchaseState, orderId: "GPA.1", purchaseType: 0 });
+      if (url.includes("/purchases/products/apples_50/tokens/")) return Response.json({ purchaseState, orderId: "GPA.1", purchaseType: 0 });
       return new Response("", { status: 404 });
     };
-    const ok = await verifyPlayPurchase("apples_60", "tok", fake);
+    const ok = await verifyPlayPurchase("apples_50", "tok", fake);
     check(ok.orderId === "GPA.1", "purchase check: a paid purchase passes");
     purchaseState = 2;
     let err = null;
-    try { await verifyPlayPurchase("apples_60", "tok", fake); } catch (e) { err = e.publicCode; }
+    try { await verifyPlayPurchase("apples_50", "tok", fake); } catch (e) { err = e.publicCode; }
     check(err === "purchase_pending", "purchase check: a pending purchase pays nothing yet");
     purchaseState = 1;
-    try { await verifyPlayPurchase("apples_60", "tok", fake); } catch (e) { err = e.publicCode; }
+    try { await verifyPlayPurchase("apples_50", "tok", fake); } catch (e) { err = e.publicCode; }
     check(err === "purchase_not_paid", "purchase check: a canceled purchase is refused");
     err = null;
     try { await verifyPlayPurchase("apples_999", "tok", fake); } catch (e) { err = e.publicCode; }
@@ -128,13 +128,13 @@ try {
   await ensureStarter(sql, googleUser);
   const before = (await loadState(sql, googleUser)).apples;
   const token = `purchase-${run}`;
-  let g = await grantPurchase(sql, googleUser, { productId: "apples_60", purchaseToken: token, orderId: "GPA.1" });
+  let g = await grantPurchase(sql, googleUser, { productId: "apples_50", purchaseToken: token, orderId: "GPA.1" });
   let after = (await loadState(sql, googleUser)).apples;
-  check(g.granted && after === before + 60, `a purchase adds the apples once (${before} -> ${after})`);
-  g = await grantPurchase(sql, googleUser, { productId: "apples_60", purchaseToken: token, orderId: "GPA.1" });
+  check(g.granted && after === before + 50, `a purchase adds the apples once (${before} -> ${after})`);
+  g = await grantPurchase(sql, googleUser, { productId: "apples_50", purchaseToken: token, orderId: "GPA.1" });
   check(!g.granted && (await loadState(sql, googleUser)).apples === after, "the same purchase again pays nothing");
   let used = null;
-  try { await grantPurchase(sql, emailOnly.id, { productId: "apples_60", purchaseToken: token }); } catch (e) { used = e.publicCode; }
+  try { await grantPurchase(sql, emailOnly.id, { productId: "apples_50", purchaseToken: token }); } catch (e) { used = e.publicCode; }
   check(used === "purchase_used", "another account cannot use the same purchase");
 
   // ---- ad: double a match reward (AdMob's signature made with our own key)

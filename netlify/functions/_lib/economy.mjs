@@ -29,10 +29,12 @@ export const ECONOMY = {
   // golden apples for real money (Google Play one-time products; the store shows its own local prices,
   // usd is only a fallback label)
   appleProducts: [
-    { id: "apples_60", apples: 60, usd: "0.99" },
-    { id: "apples_330", apples: 330, usd: "4.99" },
-    { id: "apples_700", apples: 700, usd: "9.99" },
-    { id: "apples_1500", apples: 1500, usd: "19.99" }
+    { id: "apples_50", apples: 50, usd: "0.99" },
+    { id: "apples_160", apples: 160, usd: "2.99" },
+    { id: "apples_280", apples: 280, usd: "4.99" },
+    { id: "apples_600", apples: 600, usd: "9.99" },
+    { id: "apples_1300", apples: 1300, usd: "19.99" },
+    { id: "apples_8000", apples: 8000, usd: "99.99" }
   ],
   // "watch an ad to double the reward": at most this many per player in 24 hours
   adDoubleDailyLimit: 10,
