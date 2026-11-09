@@ -9,26 +9,63 @@ let lastQuery = "";
 /** The player id the game shows in Settings (players quote it when they contact us). */
 export const playerCode = id => "HG-" + String(id || "").replace(/-/g, "").slice(0, 10).toUpperCase();
 
+let lastSort = "recent";
+
+/** "לפני 5 דק׳" style age of a date (or "—"). */
+export function ago(date) {
+  if (!date) return "—";
+  const min = Math.max(0, Math.round((Date.now() - new Date(date).getTime()) / 60000));
+  if (min < 2) return t("agoNow");
+  if (min < 60) return t("agoMin", min);
+  const hours = Math.round(min / 60);
+  if (hours < 24) return t("agoHours", hours);
+  const days = Math.round(hours / 24);
+  return days < 30 ? t("agoDays", days) : new Date(date).toLocaleDateString("he-IL");
+}
+
+/** How fresh an activity is: "hot" (today), "warm" (this week) or "" (older / never). */
+const freshness = date => !date ? "" : Date.now() - new Date(date).getTime() < 864e5 ? "hot" : Date.now() - new Date(date).getTime() < 7 * 864e5 ? "warm" : "";
+
+const signInName = p => [p.providers?.includes("google_play") ? t("playGames") : null, p.email ? t("email") : null].filter(Boolean).join(" + ") || "—";
+const buildName = c => (c ? String(c).replace("android/", "") : "");
+
 export function renderPlayerList(root) {
   clear(root);
+  const stats = h("div", { class: "stat-row" });
   const list = h("div", { class: "player-list" });
   const search = h("input", { type: "search", class: "input grow", placeholder: t("searchPlayers"), value: lastQuery });
+  const sort = h("select", { class: "input", "aria-label": t("sortBy"), onchange: () => { lastSort = sort.value; run(); } },
+    ["recent", "new", "games"].map(v => h("option", { value: v, selected: v === lastSort }, t("sort." + v))));
   let timer;
   search.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(run, 300); });
-  root.append(h("div", { class: "toolbar" }, h("div", { class: "search-box grow" }, icon("search"), search)), list);
+  root.append(h("div", { class: "toolbar wrap" }, h("div", { class: "search-box grow" }, icon("search"), search), sort), stats, list,
+    h("div", { class: "hint" }, t("playersHint")));
 
   async function run() {
     lastQuery = search.value.trim();
     list.replaceChildren(h("div", { class: "muted" }, t("loading")));
-    const res = await api.get("admin-players?q=" + encodeURIComponent(lastQuery));
+    const res = await api.get(`admin-players?q=${encodeURIComponent(lastQuery)}&sort=${lastSort}`);
     clear(list);
     if (!res.ok) { list.append(h("div", { class: "empty" }, t("networkError"))); return; }
+    const s = res.data.stats;
+    if (s) stats.replaceChildren(
+      bigStat(t("statTotal"), fmt(s.total), "#9db4ff"),
+      bigStat(t("statDay"), fmt(s.day), "#4ade80"),
+      bigStat(t("statWeek"), fmt(s.week), "#facc15"),
+      bigStat(t("statPlayed"), fmt(s.played), "#c084fc"),
+      bigStat(t("statNewWeek"), fmt(s.new_week), "#38bdf8"));
     if (res.data.players.length === 0) list.append(h("div", { class: "empty" }, t("noPlayers")));
     for (const p of res.data.players)
       list.append(h("a", { class: "player-row", href: `#/players/${p.id}` },
+        h("span", { class: "dot " + freshness(p.last_active), title: p.last_active ? new Date(p.last_active).toLocaleString("he-IL") : t("neverSeen") }),
         h("div", { class: "grow" },
           h("div", { class: "player-name" }, p.display_name || p.email || p.id, p.role === "admin" ? h("span", { class: "badge" }, t("roleAdmin")) : null),
-          h("div", { class: "muted small", dir: "ltr" }, playerCode(p.id), p.email ? " · " + p.email : "")),
+          h("div", { class: "muted small", dir: "ltr" }, playerCode(p.id), p.email ? " · " + p.email : ""),
+          h("div", { class: "player-meta small" },
+            h("span", {}, signInName(p)),
+            h("span", {}, t("lastActive"), " ", h("b", {}, ago(p.last_active))),
+            h("span", {}, t("gamesCount", p.games, p.wins)),
+            p.last_client ? h("span", { dir: "ltr" }, "build ", buildName(p.last_client)) : null)),
         h("div", { class: "wallet" },
           h("span", { class: "coin" }, icon("coin", 14), fmt(p.coins)),
           h("span", { class: "apple" }, fmt(p.apples), " ", t("apples")))));
@@ -43,7 +80,7 @@ export async function renderPlayer(root, id) {
   show(res.data);
 
   function show(data) {
-    const { player, state, events } = data;
+    const { player, state, events, matchTotals = [], matches = [] } = data;
     clear(root);
     root.append(
       h("div", { class: "toolbar" },
@@ -51,8 +88,10 @@ export async function renderPlayer(root, id) {
         h("h2", { class: "grow title-sm" }, player.display_name || player.email || player.id)),
       h("div", { class: "panel" },
         h("div", { class: "kv" }, h("span", {}, t("email")), h("span", { dir: "ltr" }, player.email || "—")),
-        h("div", { class: "kv" }, h("span", {}, t("signIn")), h("span", {}, [player.email ? t("email") : null, ...(player.providers || [])].filter(Boolean).join(", ") || "—")),
+        h("div", { class: "kv" }, h("span", {}, t("signIn")), h("span", {}, signInName({ ...player, providers: (player.providers || []).join(",") }))),
         h("div", { class: "kv" }, h("span", {}, t("joined")), h("span", {}, new Date(player.created_at).toLocaleDateString("he-IL"))),
+        h("div", { class: "kv" }, h("span", {}, t("lastSeen")), h("span", { title: player.last_seen_at ? new Date(player.last_seen_at).toLocaleString("he-IL") : "" }, player.last_seen_at ? ago(player.last_seen_at) : t("notSeenYet"))),
+        h("div", { class: "kv" }, h("span", {}, t("appBuild")), h("span", { dir: "ltr" }, buildName(player.last_client) || "—")),
         h("div", { class: "kv" }, h("span", {}, t("playerCode")),
           h("button", { type: "button", class: "btn ghost small", dir: "ltr", onclick: () => { navigator.clipboard?.writeText(playerCode(player.id)); toast(t("copied")); } },
             icon("copy", 14), playerCode(player.id))),
@@ -63,6 +102,7 @@ export async function renderPlayer(root, id) {
         bigStat(t("coins"), fmt(state.coins), "#ffd04d"),
         bigStat(t("apples"), fmt(state.apples), "#ffb547"),
         ...rules.rarities.map(r => bigStat(`${t("shards")} · ${rarityName(r.id)}`, fmt(state.shards[r.id]), RARITY_COLORS[r.id]))),
+      activityPanel(matchTotals, matches),
       grantPanel(player.id, show),
       collectionPanel(state),
       historyPanel(events));
@@ -70,6 +110,22 @@ export async function renderPlayer(root, id) {
 }
 
 const bigStat = (label, value, color) => h("div", { class: "big-stat", style: { "--c": color } }, h("div", { class: "big-value" }, value), h("div", { class: "muted small" }, label));
+
+// ------------------------------------------------------------------ activity
+
+function activityPanel(totals, matches) {
+  const count = (mode, result) => totals.filter(x => (!mode || x.mode === mode) && (!result || x.result === result)).reduce((n, x) => n + x.n, 0);
+  const modes = ["ai", "online", "tutorial"].filter(m => count(m) > 0);
+  return h("section", { class: "panel" },
+    h("h3", { class: "section" }, t("activity"), " ", h("span", { class: "muted small" }, t("gamesCount", count(), count(null, "win")))),
+    modes.length === 0 ? h("div", { class: "muted" }, t("noGames")) : [
+      h("div", { class: "mode-grid" }, modes.map(m => h("div", { class: "kv" }, h("span", {}, t("mode." + m)),
+        h("span", {}, t("winLose", count(m, "win"), count(m) - count(m, "win")))))),
+      h("div", { class: "history" }, matches.map(m => h("div", { class: "history-row" },
+        h("span", { class: "badge" + (m.result === "win" ? "" : " lose") }, t("result." + m.result) === "result." + m.result ? m.result : t("result." + m.result)),
+        h("span", { class: "grow small" }, t("mode." + m.mode) === "mode." + m.mode ? m.mode : t("mode." + m.mode), m.turns ? " · " + t("turns", m.turns) : ""),
+        h("span", { class: "muted small" }, new Date(m.created_at).toLocaleString("he-IL")))))]);
+}
 
 // ------------------------------------------------------------------ grant
 

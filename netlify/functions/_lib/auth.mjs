@@ -76,7 +76,27 @@ export async function currentUser(event) {
     limit 1
   `;
 
-  return rows[0] || null;
+  const user = rows[0] || null;
+  if (user) await touchLastSeen(sql, user.id, event);
+  return user;
+}
+
+/**
+ * Remembers when the player last used the app and with which build (the X-HG-Client header, e.g. "android/448147";
+ * requests without it, like the back office, keep the last one). At most one write every 5 minutes per player, and a
+ * failure (e.g. before migration 008) never breaks the request.
+ */
+async function touchLastSeen(sql, userId, event) {
+  const header = String(event.headers?.["x-hg-client"] || event.headers?.["X-HG-Client"] || "").slice(0, 40);
+  const client = /^[a-z]+\/\d+$/.test(header) ? header : null;
+  try {
+    await sql`
+      update app_users set last_seen_at = now(), last_client = coalesce(${client}, last_client)
+      where id = ${userId}
+        and (last_seen_at is null or last_seen_at < now() - interval '5 minutes'
+             or (${client}::text is not null and last_client is distinct from ${client}))
+    `;
+  } catch { /* column missing until migration 008 runs */ }
 }
 
 export async function requireUser(event) {

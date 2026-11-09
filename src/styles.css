@@ -203,6 +203,13 @@ select.input { cursor: pointer; }
 .player-list { display: flex; flex-direction: column; gap: 8px; }
 .player-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line2); }
 .player-row:hover { border-color: var(--line); }
+.player-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 4px; color: var(--muted); }
+.player-meta b { color: var(--text, inherit); font-weight: 700; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: var(--line2); }
+.dot.hot { background: #4ade80; box-shadow: 0 0 8px #4ade8099; }
+.dot.warm { background: #facc15; }
+.badge.lose { color: #f87171; }
+.mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 18px; margin-bottom: 8px; }
 .player-name { font-weight: 700; }
 .wallet { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-weight: 700; font-size: 14px; }
 .wallet .coin { color: #ffd04d; display: inline-flex; align-items: center; gap: 4px; }

@@ -6,7 +6,8 @@ import { ECONOMY, RARITIES, ensureStarter, httpError, loadCatalog, loadState, ma
 
 /**
  * Back office: players (admins only).
- *   GET  ?q=text            search by email, name, id or the in-game player id "HG-XXXXXXXXXX" (newest first, 50 at most)
+ *   GET  ?q=text&sort=recent|new|games   search by email, name, id or the in-game player id "HG-XXXXXXXXXX" (200 at most),
+ *                          with activity (last seen, build, games) and totals for the whole game
  *   GET  ?id=<user id>      the player: account, wallet, collection, shards, recent history
  *   POST { action: "grant", userId, coins, apples, cards: {id: n}, shards: {rarity: n}, note }
  *        adds (or, with negative numbers, removes) currency, cards and shards in one atomic step; logged with the admin
@@ -27,15 +28,45 @@ export async function handler(event) {
       // the player id shown in the game is "HG-" + the first 10 hex digits of the account id
       const code = q.replace(/^hg-?/i, "").replace(/-/g, "").toLowerCase();
       const codePrefix = /^[0-9a-f]{6,32}$/.test(code) ? code + "%" : "";
+      const sort = ["recent", "new", "games"].includes(event.queryStringParameters?.sort) ? event.queryStringParameters.sort : "recent";
+      // last_seen_at / last_client come from migration 008; read through to_jsonb so the list works before it runs
       const rows = await sql`
-        select u.id, u.email, u.display_name, u.role, u.created_at, w.coins, w.apples
-        from app_users u left join player_wallets w on w.user_id = u.id
+        select u.id, u.email, u.display_name, u.role, u.created_at, w.coins, w.apples,
+          (to_jsonb(u) ->> 'last_seen_at')::timestamptz as last_seen_at, to_jsonb(u) ->> 'last_client' as last_client,
+          coalesce(m.games, 0)::int as games, coalesce(m.wins, 0)::int as wins, m.last_match,
+          (select string_agg(i.provider, ',') from user_identities i where i.user_id = u.id) as providers,
+          greatest((to_jsonb(u) ->> 'last_seen_at')::timestamptz, m.last_match,
+            (select max(s.created_at) from user_sessions s where s.user_id = u.id)) as last_active
+        from app_users u
+        left join player_wallets w on w.user_id = u.id
+        left join lateral (
+          select count(*) as games, count(*) filter (where r.result = 'win') as wins, max(r.created_at) as last_match
+          from match_results r where r.user_id = u.id
+        ) m on true
         where ${q} = '' or u.email ilike ${like} or u.display_name ilike ${like} or u.id::text = ${q}
           or (${codePrefix} <> '' and replace(u.id::text, '-', '') like ${codePrefix})
-        order by u.created_at desc
-        limit 50
+        order by
+          case when ${sort} = 'new' then u.created_at end desc,
+          case when ${sort} = 'games' then coalesce(m.games, 0) end desc,
+          last_active desc nulls last, u.created_at desc
+        limit 200
       `;
-      return json(200, { players: rows });
+      const [stats] = await sql`
+        with a as (
+          select u.created_at, greatest((to_jsonb(u) ->> 'last_seen_at')::timestamptz,
+            (select max(r.created_at) from match_results r where r.user_id = u.id),
+            (select max(s.created_at) from user_sessions s where s.user_id = u.id)) as last_active,
+            exists (select 1 from match_results r where r.user_id = u.id) as played
+          from app_users u
+        )
+        select count(*)::int as total,
+          count(*) filter (where last_active > now() - interval '1 day')::int as day,
+          count(*) filter (where last_active > now() - interval '7 days')::int as week,
+          count(*) filter (where played)::int as played,
+          count(*) filter (where created_at > now() - interval '7 days')::int as new_week
+        from a
+      `;
+      return json(200, { players: rows, stats });
     }
 
     if (event.httpMethod !== "POST") return methodNotAllowed(["GET", "POST"]);
@@ -106,14 +137,20 @@ export async function handler(event) {
 }
 
 async function playerDetail(sql, id) {
-  const [user] = await sql`select id, email, display_name, role, created_at from app_users where id::text = ${String(id)}`;
+  const [user] = await sql`
+    select id, email, display_name, role, created_at,
+      (to_jsonb(u) ->> 'last_seen_at')::timestamptz as last_seen_at, to_jsonb(u) ->> 'last_client' as last_client
+    from app_users u where id::text = ${String(id)}
+  `;
   if (!user) throw httpError(404, "player_not_found");
   let providers = [];
   try { providers = (await sql`select provider from user_identities where user_id = ${user.id}`).map(r => r.provider); }
   catch { /* sign-in methods table not migrated yet */ }
-  const [state, events] = await Promise.all([
+  const [state, events, matchTotals, matches] = await Promise.all([
     loadState(sql, user.id),
     sql`select kind, detail, created_at from economy_events where user_id = ${user.id} order by created_at desc limit 30`,
+    sql`select mode, result, count(*)::int as n from match_results where user_id = ${user.id} group by mode, result`,
+    sql`select mode, result, turns, created_at from match_results where user_id = ${user.id} order by created_at desc limit 15`,
   ]);
-  return { player: { ...user, providers }, state, events, maxCopies: ECONOMY.maxCopies };
+  return { player: { ...user, providers }, state, events, matchTotals, matches, maxCopies: ECONOMY.maxCopies };
 }
