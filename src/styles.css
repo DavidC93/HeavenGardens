@@ -268,3 +268,27 @@ select.input { cursor: pointer; }
 .ai-pool-count { position: absolute; top: 4px; inset-inline-end: 4px; min-width: 22px; padding: 0 6px; border-radius: 999px; background: var(--gold); color: #2b1a00; font-weight: 800; font-size: 13px; }
 .ai-pool-name { font-size: 12px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 560px) { .ai-random { grid-template-columns: 1fr; } }
+
+/* ---------------------------------------------------------------- ranked leagues */
+.rank-bars { display: grid; gap: 6px; }
+.rank-bar-row { display: grid; grid-template-columns: 150px 1fr 48px; gap: 10px; align-items: center; }
+.rank-bar-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-bar-track { height: 14px; border-radius: 7px; background: var(--line2); overflow: hidden; }
+.rank-bar-fill { display: block; height: 100%; border-radius: 7px; background: linear-gradient(90deg, #ffd04d, #ff9f43); min-width: 2px; }
+.rank-bar-n { text-align: end; font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; }
+.ranks-table { width: 100%; border-collapse: collapse; }
+.ranks-table th { text-align: start; font-size: 12px; color: var(--muted); font-weight: 600; padding: 6px; }
+.ranks-table td { padding: 6px; vertical-align: top; }
+.ranks-table .rank-row td { border-top: 1px solid var(--line2); }
+.ranks-table .rank-row .input:not(.num) { min-width: 120px; margin-bottom: 4px; }
+.ranks-table .input.num { max-width: 80px; }
+.ranks-table .check { display: flex; gap: 6px; align-items: center; white-space: nowrap; font-size: 13px; }
+.reward-pair { display: flex; flex-wrap: wrap; gap: 18px; padding-bottom: 6px; }
+.bundle { display: flex; flex-wrap: wrap; gap: 8px; }
+.bundle label { display: grid; gap: 2px; }
+.bundle .input.num { max-width: 84px; }
+.grid-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px 16px; margin-bottom: 12px; }
+table.mini { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+table.mini td { padding: 4px 6px; border-bottom: 1px solid var(--line2); }
+@media (max-width: 640px) { .rank-bar-row { grid-template-columns: 110px 1fr 36px; } }

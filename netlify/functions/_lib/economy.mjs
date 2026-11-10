@@ -20,8 +20,8 @@ export const ECONOMY = {
     g_004: 1
   },
   rewards: {
-    ai: { win: 500, lose: 200 },
-    online: { win: 1000, lose: 500 }
+    ai: { win: 250, lose: 100 },
+    online: { win: 500, lose: 250 }
   },
   // a game must last this many turns to earn anything, and AI rewards are at least this far apart
   rewardMinTurns: 6,
@@ -286,6 +286,67 @@ export async function claimTutorialPack(sql, userId) {
 }
 
 // ---------------------------------------------------------------- disenchant / craft
+
+/**
+ * Pays a reward once per (user, key): coins, golden apples and opened packs, in one atomic statement.
+ * bundle = { coins, apples, packs: { basic, big, premium } }. Returns { coins, apples, packs: [{ pack, cards }] },
+ * or null when this key was already paid.
+ */
+export async function grantBundle(sql, userId, rewardKey, bundle, kind = "rank") {
+  const coins = Math.max(0, Math.trunc(Number(bundle?.coins) || 0));
+  const apples = Math.max(0, Math.trunc(Number(bundle?.apples) || 0));
+  const packIds = [];
+  for (const p of ECONOMY.packs) for (let i = 0; i < Math.min(10, Math.max(0, Math.trunc(Number(bundle?.packs?.[p.id]) || 0))); i++) packIds.push(p.id);
+  const opened = [];
+  let all = [], maxById = null;
+  if (packIds.length > 0) {
+    const [catalog, state] = await Promise.all([loadCatalog(sql), loadState(sql, userId)]);
+    const owned = Object.fromEntries(Object.entries(state.cards).map(([id, c]) => [id, { ...c }]));
+    for (const id of packIds) {
+      const results = drawPack(ECONOMY.packs.find(p => p.id === id), catalog, owned);
+      // later packs see the earlier ones' cards (so a 5th copy turns into shards)
+      for (const r of results) if (!(r.shards > 0)) owned[r.cardId] = { count: (owned[r.cardId]?.count || 0) + 1, locked: owned[r.cardId]?.locked || 0 };
+      opened.push({ pack: id, cards: results });
+      all = all.concat(results);
+    }
+    maxById = Object.fromEntries(catalog.map(c => [c.id, maxCopiesOf(c)]));
+  }
+  const { cards, shards } = summarize(all);
+  const cardRows = cards.map(c => ({ ...c, max: maxById?.[c.card_id] ?? ECONOMY.maxCopies }));
+  const detail = { coins, apples, packs: opened };
+  const done = await sql`
+    with k as (
+      insert into rank_rewards (user_id, reward_key, detail)
+      values (${userId}, ${rewardKey}, ${JSON.stringify({ coins, apples, packs: packIds })}::jsonb)
+      on conflict (user_id, reward_key) do nothing
+      returning 1
+    ),
+    w as (
+      update player_wallets set coins = coins + ${coins}, apples = apples + ${apples}, updated_at = now()
+      where user_id = ${userId} and exists (select 1 from k)
+      returning 1
+    ),
+    c as (
+      insert into player_cards (user_id, card_id, count)
+      select ${userId}, x.card_id, least(x.n, x.max) from k, jsonb_to_recordset(${JSON.stringify(cardRows)}::jsonb) as x(card_id text, n int, max int)
+      on conflict (user_id, card_id) do update set count = least(player_cards.count + excluded.count, ${ECONOMY.maxCopies}), updated_at = now()
+      returning 1
+    ),
+    s as (
+      insert into player_shards (user_id, rarity, amount)
+      select ${userId}, x.rarity, x.n from k, jsonb_to_recordset(${JSON.stringify(shards)}::jsonb) as x(rarity text, n int)
+      on conflict (user_id, rarity) do update set amount = player_shards.amount + excluded.amount
+      returning 1
+    ),
+    e as (
+      insert into economy_events (user_id, kind, detail)
+      select ${userId}, ${kind}, ${JSON.stringify({ key: rewardKey, ...detail })}::jsonb from k
+      returning 1
+    )
+    select 1 as ok from k
+  `;
+  return done.length > 0 ? detail : null;
+}
 
 export async function disenchant(sql, userId, cardId, amount) {
   const n = Math.max(1, Math.min(ECONOMY.maxCopies, Math.floor(Number(amount) || 1)));

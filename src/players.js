@@ -1,3 +1,4 @@
+import { rankPanel } from "./ranks.js";
 import { api } from "./api.js";
 import { h, clear, icon, toast, fmt } from "./dom.js";
 import { t } from "./i18n.js";
@@ -103,6 +104,7 @@ export async function renderPlayer(root, id) {
         bigStat(t("apples"), fmt(state.apples), "#ffb547"),
         ...rules.rarities.map(r => bigStat(`${t("shards")} · ${rarityName(r.id)}`, fmt(state.shards[r.id]), RARITY_COLORS[r.id]))),
       activityPanel(matchTotals, matches),
+      rankPanel(player.id, data.rank, player.nickname, data.leagues, () => renderPlayer(root, id)),
       grantPanel(player.id, show),
       collectionPanel(state),
       historyPanel(events));

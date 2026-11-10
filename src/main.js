@@ -7,6 +7,7 @@ import { loadCards, renderCardList, renderCardEditor, isDirty, clearDirty } from
 import { renderPlayerList, renderPlayer } from "./players.js";
 import { renderSettings } from "./settings.js";
 import { renderAi, renderAiDeck } from "./ai.js";
+import { renderRanks } from "./ranks.js";
 
 // Heaven Gardens back office: cards (create / edit), players (currency, cards and shards), the computer's decks and levels, and app versions. Admins only.
 const app = document.getElementById("app");
@@ -57,6 +58,7 @@ function renderShell() {
     h("a", { href: "#/cards", "data-tab": "cards" }, icon("cards"), t("cards")),
     h("a", { href: "#/players", "data-tab": "players" }, icon("users"), t("players")),
     h("a", { href: "#/ai", "data-tab": "ai" }, icon("sword"), t("ai")),
+    h("a", { href: "#/ranks", "data-tab": "ranks" }, icon("shield"), t("ranks")),
     h("a", { href: "#/settings", "data-tab": "settings" }, icon("refresh"), t("settings")));
   clear(app).append(
     h("header", { class: "topbar" },
@@ -83,6 +85,7 @@ function route() {
   for (const a of document.querySelectorAll("[data-tab]")) a.classList.toggle("active", a.dataset.tab === (section || "cards"));
   window.scrollTo(0, 0);
   if (section === "settings") renderSettings(view);
+  else if (section === "ranks") renderRanks(view);
   else if (section === "ai") id ? renderAiDeck(view, decodeURIComponent(id)) : renderAi(view);
   else if (section === "players") id ? renderPlayer(view, decodeURIComponent(id)) : renderPlayerList(view);
   else if (id) renderCardEditor(view, decodeURIComponent(id), savedId => { location.hash = `#/cards/${encodeURIComponent(savedId)}`; if (location.hash === currentHash) route(); });

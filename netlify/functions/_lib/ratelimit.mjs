@@ -18,6 +18,7 @@ export const LIMITS = {
   accountDelete: { limit: 5, windowSeconds: 3600 },  // per user
   appStatus: { limit: 60, windowSeconds: 600 },      // per IP
   adCallback: { limit: 120, windowSeconds: 60 },     // per IP (AdMob's servers)
+  ranked: { limit: 60, windowSeconds: 60 },          // per user (the leaderboard: per IP for guests)
 };
 
 export function clientIp(event) {

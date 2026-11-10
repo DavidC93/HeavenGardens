@@ -79,15 +79,15 @@ try {
   r = await call("POST", { action: "reward", mode: "ai", result: "win", turns: 3, matchKey: "short-game-1" });
   check(r.data.coins === 0 && r.data.reason === "too_short", "a game shorter than 6 turns earns nothing");
   r = await call("POST", { action: "reward", mode: "ai", result: "win", turns: 9, matchKey: "ai-game-0001" });
-  check(r.data.coins === 500 && r.data.state.coins === 500, "win against the computer: +500");
+  check(r.data.coins === 250 && r.data.state.coins === 250, "win against the computer: +250 (half; the ad doubles it)");
   r = await call("POST", { action: "reward", mode: "ai", result: "lose", turns: 9, matchKey: "ai-game-0002" });
   check(r.data.coins === 0 && r.data.reason === "too_fast", "computer rewards are at least 45 s apart");
   r = await call("POST", { action: "reward", mode: "online", result: "win", turns: 12, matchKey: "online-match-1" });
-  check(r.data.coins === 1000 && r.data.state.coins === 1500, "online win: +1000");
+  check(r.data.coins === 500 && r.data.state.coins === 750, "online win: +500");
   r = await call("POST", { action: "reward", mode: "online", result: "win", turns: 12, matchKey: "online-match-1" });
   check(r.data.coins === 0 && r.data.reason === "already_rewarded", "the same match pays once");
   r = await call("POST", { action: "reward", mode: "online", result: "lose", turns: 12, matchKey: "online-match-2" });
-  check(r.data.coins === 500 && r.data.state.coins === 2000, "online loss: +500");
+  check(r.data.coins === 250 && r.data.state.coins === 1000, "online loss: +250");
 
   // premium pack with apples (give some directly in the test database)
   await sql`update player_wallets set apples = 60 where user_id = ${user.id}`;

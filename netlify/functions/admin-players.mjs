@@ -3,6 +3,7 @@ import { requireAdmin } from "./_lib/auth.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 import { rateLimit } from "./_lib/ratelimit.mjs";
 import { ECONOMY, RARITIES, ensureStarter, httpError, loadCatalog, loadState, maxCopiesOf } from "./_lib/economy.mjs";
+import { loadRanks, playerRank } from "./_lib/ranks.mjs";
 
 /**
  * Back office: players (admins only).
@@ -138,7 +139,7 @@ export async function handler(event) {
 
 async function playerDetail(sql, id) {
   const [user] = await sql`
-    select id, email, display_name, role, created_at,
+    select id, email, display_name, role, created_at, to_jsonb(u) ->> 'nickname' as nickname,
       (to_jsonb(u) ->> 'last_seen_at')::timestamptz as last_seen_at, to_jsonb(u) ->> 'last_client' as last_client
     from app_users u where id::text = ${String(id)}
   `;
@@ -152,5 +153,8 @@ async function playerDetail(sql, id) {
     sql`select mode, result, count(*)::int as n from match_results where user_id = ${user.id} group by mode, result`,
     sql`select mode, result, turns, created_at from match_results where user_id = ${user.id} order by created_at desc limit 15`,
   ]);
-  return { player: { ...user, providers }, state, events, matchTotals, matches, maxCopies: ECONOMY.maxCopies };
+  const ranks = await loadRanks(sql);
+  const rank = await playerRank(sql, ranks, user.id);
+  const leagues = ranks.leagues.map(l => ({ league: l.league, he: l.he }));
+  return { player: { ...user, providers }, state, events, matchTotals, matches, rank, leagues, maxCopies: ECONOMY.maxCopies };
 }
