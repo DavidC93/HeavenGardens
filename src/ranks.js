@@ -61,7 +61,7 @@ export async function renderRanks(root) {
 
   const g = {
     cap: num(config.cap, { min: "100" }), streakFrom: num(config.streakFrom, { min: "2" }), streakBonus: num(config.streakBonus, { min: "0" }),
-    mercyAfter: num(config.mercyAfter, { min: "0" }), minTurns: num(config.minTurns, { min: "0" }), openMinutes: num(config.openMinutes, { min: "10" }),
+    mercyAfter: num(config.mercyAfter, { min: "0" }), minTurns: num(config.minTurns, { min: "0" }), openMinutes: num(config.openMinutes, { min: "10" }), confirmSeconds: num(config.confirmSeconds, { min: "30" }),
     seasonMonths: num(config.seasonMonths, { min: "1", max: "12" }), firstSeasonStart: h("input", { class: "input", type: "date", dir: "ltr", value: config.firstSeasonStart }),
     resetFrom: num(config.resetFrom, { min: "0" }), resetKeepPercent: num(config.resetKeepPercent, { min: "0", max: "100" })
   };

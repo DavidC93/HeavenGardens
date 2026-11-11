@@ -21,6 +21,7 @@ export const DEFAULT_RANKS = {
   mercyAfter: 3,          // after this many losses in a row the computer plays one level lower, until a win
   minTurns: 6,            // a shorter win earns no points (a loss always counts)
   openMinutes: 120,       // a started match with no result after this long is a loss
+  confirmSeconds: 180,    // online: a claimed win the opponent never answers counts after this long (they left)
   seasonMonths: 3,
   firstSeasonStart: "2027-01-01", // before it: the pre-season; everyone starts the first season from 0
   resetFrom: 750,         // at a season's end the points above this are cut...
@@ -73,6 +74,7 @@ export function normalizeRanks(raw) {
     mercyAfter: int(r.mercyAfter, 0, 20, d.mercyAfter),
     minTurns: int(r.minTurns, 0, 100, d.minTurns),
     openMinutes: int(r.openMinutes, 10, 7 * 24 * 60, d.openMinutes),
+    confirmSeconds: int(r.confirmSeconds, 30, 3600, d.confirmSeconds),
     seasonMonths: int(r.seasonMonths, 1, 12, d.seasonMonths),
     firstSeasonStart: /^\d{4}-\d{2}-01$/.test(String(r.firstSeasonStart)) ? r.firstSeasonStart : d.firstSeasonStart,
     resetFrom: int(r.resetFrom, 0, 1_000_000, d.resetFrom),
@@ -259,7 +261,7 @@ export async function ensureNickname(sql, userId) {
 export async function setNickname(sql, userId, raw) {
   const name = checkNickname(raw);
   try {
-    await sql`update app_users set nickname = ${name} where id = ${userId}`;
+    await sql`update app_users set nickname = ${name}, nickname_chosen = true where id = ${userId}`;
   } catch {
     throw httpError(409, "nickname_taken");
   }
@@ -309,17 +311,30 @@ export async function loadRank(sql, userId, cfg, now = Date.now()) {
       row = numRow((await sql`select * from player_ranks where user_id = ${userId}`)[0]);
     }
   }
-  const settled = [];
+  const settled = [], confirmed = [];
+  // online: claims waiting for the opponent are answered now (or counted, once the opponent stayed silent too long)
+  const claims = await sql`select match_key, claim, turns from ranked_matches
+    where user_id = ${userId} and finished_at is null and claim is not null order by claimed_at`;
+  for (const c of claims) {
+    const r = await resolveOnline(sql, userId, cfg, row, season, c.match_key, c.claim, Number(c.turns || 0));
+    if (r?.outcome && !r.outcome.pending) { row = r.row; confirmed.push(r.outcome); }
+  }
   const expired = await sql`
     select match_key from ranked_matches
-    where user_id = ${userId} and finished_at is null and started_at < now() - make_interval(mins => ${cfg.openMinutes})
+    where user_id = ${userId} and finished_at is null and claim is null and started_at < now() - make_interval(mins => ${cfg.openMinutes})
     order by started_at
   `;
   for (const m of expired) {
     const r = await finishMatch(sql, userId, cfg, row, m.match_key, "abandoned", 0, season);
     if (r) { row = r.row; settled.push(r.outcome); }
   }
-  return { row, season, seasonReward, settled };
+  return { row, season, seasonReward, settled, confirmed };
+}
+
+/** A result that moves nothing: both online players claimed the win (disputed), or no opponent ever joined (void). */
+async function closeWithoutPoints(sql, userId, matchKey, result, turns) {
+  await sql`update ranked_matches set finished_at = now(), result = ${result}, turns = ${turns}, delta = 0
+    where user_id = ${userId} and match_key = ${matchKey} and finished_at is null`;
 }
 
 /**
@@ -327,7 +342,9 @@ export async function loadRank(sql, userId, cfg, now = Date.now()) {
  * as a loss. Pays the rewards of every league newly reached this season. Returns { row, outcome } or null.
  */
 async function finishMatch(sql, userId, cfg, row, matchKey, result, turns, season) {
-  const score = scoreMatch(cfg, row, { result: result === "abandoned" ? "lose" : result, turns, mode: "ai" });
+  const [m0] = await sql`select mode from ranked_matches where user_id = ${userId} and match_key = ${matchKey}`;
+  const mode = m0?.mode === "online" ? "online" : "ai";
+  const score = scoreMatch(cfg, row, { result: result === "abandoned" ? "lose" : result, turns, mode });
   const league = leagueOf(cfg, score.points).league;
   const won = result === "win" && score.counted ? 1 : 0;
   const rows = await sql`
@@ -360,51 +377,122 @@ async function finishMatch(sql, userId, cfg, row, matchKey, result, turns, seaso
   };
 }
 
-/** Starts a ranked match against the computer: an older unfinished one counts as a loss first. */
-export async function startMatch(sql, userId, cfg, matchKey) {
+/** Another player's rank row, for settling their side of an online game. */
+async function rowOf(sql, userId) {
+  const [r] = await sql`select * from player_ranks where user_id = ${userId}`;
+  return r ? numRow(r) : null;
+}
+
+/**
+ * Online ranked: a loss counts at once; a win (or a draw) is a claim that counts when the opponent's side agrees: they
+ * reported a loss (or the draw), or stayed silent for confirmSeconds (they left: their game becomes a loss). Both
+ * claiming the win (or a win against a draw) is disputed: nobody's points move. A game nobody else joined is void.
+ * Returns { row, outcome } where outcome.pending = still waiting for the opponent.
+ */
+async function resolveOnline(sql, userId, cfg, row, season, matchKey, claim, turns) {
+  if (claim === "lose") return finishMatch(sql, userId, cfg, row, matchKey, "lose", turns, season);
+  await sql`update ranked_matches set claim = ${claim}, claimed_at = coalesce(claimed_at, now()), turns = ${turns}
+    where user_id = ${userId} and match_key = ${matchKey} and finished_at is null`;
+  const [mine] = await sql`select claimed_at, finished_at, now() - claimed_at > make_interval(secs => ${cfg.confirmSeconds}) as late
+    from ranked_matches where user_id = ${userId} and match_key = ${matchKey}`;
+  if (!mine || mine.finished_at) return null;
+  const [opp] = await sql`select user_id, finished_at, result, claim from ranked_matches
+    where match_key = ${matchKey} and user_id <> ${userId} and mode = 'online' limit 1`;
+  const done = result => finishMatch(sql, userId, cfg, row, matchKey, result, turns, season);
+  const league = leagueOf(cfg, row.points).league;
+  const nothing = async result => {
+    await closeWithoutPoints(sql, userId, matchKey, result, turns);
+    return { row, outcome: { matchKey, result, delta: 0, counted: false, points: row.points, league, leagueBefore: league, rewards: [] } };
+  };
+  const pending = { row, outcome: { matchKey, result: claim, pending: true, delta: 0, points: row.points, league, leagueBefore: league, rewards: [] } };
+
+  if (!opp) return mine.late ? nothing("void") : pending;
+  const theirs = opp.finished_at ? opp.result : opp.claim;
+  if (theirs === "lose" || theirs === "abandoned") return done(claim);
+  if (theirs === "draw" && claim === "draw") return done("draw");
+  if (theirs === "win" || theirs === "draw" || theirs === "disputed") {
+    // both sides claim a better result: nobody gains, and the other side is closed the same way
+    if (!opp.finished_at) await closeWithoutPoints(sql, opp.user_id, matchKey, "disputed", turns);
+    await sql`insert into rank_events (user_id, kind, detail) values (${userId}, 'disputed',
+      ${JSON.stringify({ matchKey, claim, opponent: opp.user_id, theirs })}::jsonb)`;
+    return nothing("disputed");
+  }
+  // the opponent has not answered (or closed without points)
+  if (opp.finished_at) return nothing("void");
+  if (!mine.late) return pending;
+  const other = await rowOf(sql, opp.user_id);
+  if (other) await finishMatch(sql, opp.user_id, cfg, other, matchKey, "abandoned", 0, seasonAt(cfg));
+  return done(claim);
+}
+
+/**
+ * Starts a ranked match: against the computer (the server picks its level), or online (matchKey = the shared
+ * session key, the same on both phones). Older unfinished games count as losses first (online claims wait).
+ */
+export async function startMatch(sql, userId, cfg, matchKey, mode = "ai") {
   const key = String(matchKey || "").slice(0, 80);
   if (!/^[A-Za-z0-9_-]{8,80}$/.test(key)) throw httpError(400, "bad_match_key");
+  const online = mode === "online";
+  if (online !== key.startsWith("on-")) throw httpError(400, "bad_match_key");
   let { row, season, seasonReward, settled } = await loadRank(sql, userId, cfg);
-  const open = await sql`select match_key from ranked_matches where user_id = ${userId} and finished_at is null and match_key <> ${key} order by started_at`;
+  const open = await sql`select match_key from ranked_matches where user_id = ${userId} and finished_at is null and claim is null
+    and match_key <> ${key} order by started_at`;
   for (const m of open) {
     const r = await finishMatch(sql, userId, cfg, row, m.match_key, "abandoned", 0, season);
     if (r) { row = r.row; settled.push(r.outcome); }
   }
+  if (online) {
+    // an online game has exactly two players
+    const [n] = await sql`select count(*)::int as n from ranked_matches where match_key = ${key} and user_id <> ${userId}`;
+    if (n.n >= 1) {
+      const [mine] = await sql`select 1 from ranked_matches where match_key = ${key} and user_id = ${userId}`;
+      if (!mine && n.n >= 2) throw httpError(409, "match_full");
+    }
+  }
   await sql`
     insert into ranked_matches (user_id, match_key, mode, season, ai_level)
-    values (${userId}, ${key}, 'ai', ${season.id}, ${aiLevelFor(cfg, row)})
+    values (${userId}, ${key}, ${online ? "online" : "ai"}, ${season.id}, ${online ? null : aiLevelFor(cfg, row)})
     on conflict (user_id, match_key) do nothing
   `;
   // a retried start returns the same match (and its level); a finished one cannot start again
   const [match] = await sql`select ai_level, finished_at from ranked_matches where user_id = ${userId} and match_key = ${key}`;
   if (match.finished_at) throw httpError(409, "match_finished");
-  return { row, season, seasonReward, settled, aiLevel: Number(match.ai_level) };
+  return { row, season, seasonReward, settled, aiLevel: Number(match.ai_level || 0) };
 }
 
 export async function reportMatch(sql, userId, cfg, body) {
   const key = String(body.matchKey || "").slice(0, 80);
   const result = ["win", "lose", "draw"].includes(body.result) ? body.result : "lose";
   const turns = int(body.turns, 0, 10_000, 0);
-  let { row, season, seasonReward, settled } = await loadRank(sql, userId, cfg);
-  const [match] = await sql`select finished_at from ranked_matches where user_id = ${userId} and match_key = ${key}`;
+  let { row, season, seasonReward, settled, confirmed } = await loadRank(sql, userId, cfg);
+  const [match] = await sql`select finished_at, mode, claim from ranked_matches where user_id = ${userId} and match_key = ${key}`;
   if (!match) throw httpError(404, "unknown_match");
   let outcome = null;
   if (!match.finished_at) {
-    const r = await finishMatch(sql, userId, cfg, row, key, result, turns, season);
+    // online: the first answer stands (a retry asks again whether the opponent agreed)
+    const r = match.mode === "online"
+      ? await resolveOnline(sql, userId, cfg, row, season, key, match.claim || result, turns)
+      : await finishMatch(sql, userId, cfg, row, key, result, turns, season);
     if (r) { row = r.row; outcome = r.outcome; }
   }
   if (!outcome) {
-    // reported again (a retry), or already counted as a loss: the stored result, nothing changes
-    const [m] = await sql`select result, delta, points_after from ranked_matches where user_id = ${userId} and match_key = ${key}`;
-    outcome = { matchKey: key, result: m.result, delta: Number(m.delta || 0), points: row.points, league: leagueOf(cfg, row.points).league, already: true, rewards: [] };
+    // reported again (a retry), or already settled (counted as a loss, or confirmed): the stored result
+    const done = confirmed.find(c => c.matchKey === key);
+    if (done) outcome = done;
+    else {
+      const [m] = await sql`select result, delta, points_before from ranked_matches where user_id = ${userId} and match_key = ${key}`;
+      outcome = { matchKey: key, result: m.result, delta: Number(m.delta || 0), points: row.points, league: leagueOf(cfg, row.points).league,
+        leagueBefore: leagueOf(cfg, Number(m.points_before ?? row.points)).league, already: true, rewards: [] };
+    }
   }
   return { row, season, seasonReward, settled, outcome };
 }
 
+
 /** What the app shows: the season, the player's points and league, the computer's next levels, the league table. */
 export async function publicStatus(sql, userId, cfg, loaded) {
   const { row, season } = loaded;
-  const [u] = await sql`select nickname from app_users where id = ${userId}`;
+  const [u] = await sql`select nickname, nickname_chosen from app_users where id = ${userId}`;
   const league = leagueOf(cfg, row.points);
   return {
     season,
@@ -416,11 +504,14 @@ export async function publicStatus(sql, userId, cfg, loaded) {
     wins: row.wins,
     cap: cfg.cap,
     nickname: u?.nickname || null,
+    nicknameChosen: !!u?.nickname_chosen,
     aiLevel: aiLevelFor(cfg, row),
     unrankedAiLevel: league.aiLevel,
     leagues: cfg.leagues.map(l => ({ league: l.league, min: l.min, he: l.he, en: l.en, win: l.win, loss: l.loss, floor: l.floor, aiPercent: l.aiPercent, reward: l.reward, seasonReward: l.seasonReward })),
     seasonReward: loaded.seasonReward || null,
-    settled: loaded.settled || []
+    settled: loaded.settled || [],
+    // online wins confirmed since the last visit (the opponent answered, or left)
+    confirmed: (loaded.confirmed || []).map(c => ({ matchKey: c.matchKey, result: c.result, delta: c.delta }))
   };
 }
 
@@ -428,7 +519,7 @@ export async function publicStatus(sql, userId, cfg, loaded) {
 export async function leaderboard(sql, cfg, userId, limit = 100) {
   const season = seasonAt(cfg);
   const top = await sql`
-    select u.nickname, r.points, r.user_id = ${userId ?? null}::uuid as me
+    select u.id, u.nickname, r.points, r.user_id = ${userId ?? null}::uuid as me
     from player_ranks r join app_users u on u.id = r.user_id
     where r.season = ${season.id} and r.games > 0
     order by r.points desc, r.reached_at asc
@@ -447,7 +538,7 @@ export async function leaderboard(sql, cfg, userId, limit = 100) {
   }
   return {
     season,
-    top: top.map((r, i) => ({ place: i + 1, nickname: r.nickname || "Gardener", points: Number(r.points), league: leagueOf(cfg, Number(r.points)).league, me: r.me })),
+    top: top.map((r, i) => ({ place: i + 1, id: r.id, nickname: r.nickname || "Gardener", points: Number(r.points), league: leagueOf(cfg, Number(r.points)).league, me: r.me })),
     mine
   };
 }
@@ -481,7 +572,7 @@ export async function adminResetNickname(sql, adminId, userId) {
   const target = String(userId || "");
   const [u] = await sql`select nickname from app_users where id::text = ${target}`;
   if (!u) throw httpError(404, "not_found");
-  await sql`update app_users set nickname = null where id::text = ${target}`;
+  await sql`update app_users set nickname = null, nickname_chosen = false where id::text = ${target}`;
   const name = await ensureNickname(sql, target);
   await sql`insert into rank_events (user_id, kind, detail, created_by) values (${target}, 'nickname_reset',
     ${JSON.stringify({ before: u.nickname, after: name })}::jsonb, ${adminId})`;

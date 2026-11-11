@@ -64,10 +64,18 @@ export async function handler(event) {
       throw err;
     }
     const body = await res.json();
+    // the Unity player id of this account: lets a past opponent send a friend request from the profile
+    const playerId = body.userId || body.user?.id;
+    if (playerId) {
+      try { await db()`update app_users set ugs_player_id = ${String(playerId).slice(0, 80)} where id = ${user.id}`; } catch { /* before migration 010 */ }
+    }
+    let nickname = null;
+    try { [{ nickname }] = await db()`select nickname from app_users where id = ${user.id}`; } catch { /* keep the default */ }
     return json(200, {
       idToken: body.idToken,
       sessionToken: body.sessionToken,
-      displayName: user.display_name || String(user.email || "").split("@")[0]
+      // the public name only (never the sign-in name)
+      displayName: nickname || "Gardener"
     });
   } catch (error) {
     return handleError(error);

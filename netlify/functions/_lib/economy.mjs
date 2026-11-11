@@ -411,15 +411,31 @@ export async function craft(sql, userId, cardId) {
 
 // ---------------------------------------------------------------- match rewards
 
-/** Logs a finished game once per match key. Works on a database without the table (before migration 006). */
-async function recordMatch(sql, userId, matchKey, mode, result, turns) {
+export const MATCH_KINDS = ["practice", "ranked", "casual", "friend"];
+
+/**
+ * Logs a finished game once per match key (the player's statistics and recent games). Both players of an online game
+ * log it under the same key, which tells each who the other was. Works on older databases (fewer columns).
+ */
+async function recordMatch(sql, userId, matchKey, mode, result, turns, extra = {}) {
+  const kind = MATCH_KINDS.includes(extra.kind) ? extra.kind : mode === "online" ? "casual" : "practice";
+  const opponent = extra.opponentName ? String(extra.opponentName).slice(0, 40) : null;
+  const aiLevel = Number.isInteger(extra.aiLevel) && extra.aiLevel >= 1 && extra.aiLevel <= 10 ? extra.aiLevel : null;
   try {
     await sql`
-      insert into match_results (user_id, match_key, mode, result, turns)
-      values (${userId}, ${matchKey}, ${mode}, ${result}, ${turns})
+      insert into match_results (user_id, match_key, mode, result, turns, kind, opponent_name, ai_level)
+      values (${userId}, ${matchKey}, ${mode}, ${result}, ${turns}, ${kind}, ${opponent}, ${aiLevel})
       on conflict (user_id, match_key) do nothing
     `;
-  } catch (e) { console.warn("match_results unavailable", e.message); }
+  } catch {
+    try {
+      await sql`
+        insert into match_results (user_id, match_key, mode, result, turns)
+        values (${userId}, ${matchKey}, ${mode}, ${result}, ${turns})
+        on conflict (user_id, match_key) do nothing
+      `;
+    } catch (e) { console.warn("match_results unavailable", e.message); }
+  }
 }
 
 export async function aiGamesPlayed(sql, userId) {
@@ -431,12 +447,16 @@ export async function aiGamesPlayed(sql, userId) {
 
 export async function rewardMatch(sql, userId, body) {
   const mode = body.mode === "online" ? "online" : "ai";
-  const result = body.result === "win" ? "win" : "lose";
+  // a draw is logged as one (statistics) and paid like a loss
+  const logged = body.result === "win" ? "win" : body.result === "draw" ? "draw" : "lose";
+  const result = logged === "win" ? "win" : "lose";
   const turns = Math.floor(Number(body.turns) || 0);
   const matchKey = String(body.matchKey || "").slice(0, 80);
   if (!/^[A-Za-z0-9_-]{8,80}$/.test(matchKey)) throw httpError(400, "bad_match_key");
-  // every finished game counts (the computer's difficulty grows with them), rewarded or not
-  await recordMatch(sql, userId, matchKey, mode, result, turns);
+  // every finished game counts (statistics, and the guest-era difficulty scale), rewarded or not
+  await recordMatch(sql, userId, matchKey, mode, logged, turns, { kind: body.kind, opponentName: body.opponentName, aiLevel: body.aiLevel });
+  // conceded games and games against friends are logged only
+  if (body.noReward === true || body.kind === "friend") return { coins: 0, reason: "none" };
   if (turns < ECONOMY.rewardMinTurns) return { coins: 0, reason: "too_short" };
   if (mode === "ai") {
     const recent = await sql`

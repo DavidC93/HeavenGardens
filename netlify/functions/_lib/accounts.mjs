@@ -45,7 +45,7 @@ export async function signInWithIdentity(sql, event, provider, subject, displayN
 }
 
 export async function userWithProviders(sql, userId) {
-  const [user] = await sql`select id, email, display_name, role from app_users where id = ${userId}`;
+  const [user] = await sql`select id, email, display_name, role, nickname, nickname_chosen from app_users where id = ${userId}`;
   const ids = await sql`select provider from user_identities where user_id = ${userId} order by provider`;
   return { ...user, providers: ids.map(r => r.provider) };
 }

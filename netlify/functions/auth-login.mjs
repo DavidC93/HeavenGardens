@@ -2,6 +2,7 @@ import { db } from "./_lib/db.mjs";
 import { createSession, normalizeEmail, sessionCookie, verifyPassword } from "./_lib/auth.mjs";
 import { clientIp, rateLimit } from "./_lib/ratelimit.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
+import { userWithProviders } from "./_lib/accounts.mjs";
 
 export async function handler(event) {
   try {
@@ -26,8 +27,7 @@ export async function handler(event) {
     }
 
     const session = await createSession(user.id);
-    delete user.password_hash;
-    return json(200, { user }, { "set-cookie": sessionCookie(session.token, session.expiresAt) });
+    return json(200, { user: await userWithProviders(sql, user.id) }, { "set-cookie": sessionCookie(session.token, session.expiresAt) });
   } catch (error) {
     return handleError(error);
   }

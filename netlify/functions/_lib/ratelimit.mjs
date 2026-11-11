@@ -19,6 +19,7 @@ export const LIMITS = {
   appStatus: { limit: 60, windowSeconds: 600 },      // per IP
   adCallback: { limit: 120, windowSeconds: 60 },     // per IP (AdMob's servers)
   ranked: { limit: 60, windowSeconds: 60 },          // per user (the leaderboard: per IP for guests)
+  profile: { limit: 60, windowSeconds: 60 },         // per user: statistics and profiles
 };
 
 export function clientIp(event) {

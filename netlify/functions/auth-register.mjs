@@ -23,7 +23,7 @@ export async function handler(event) {
     const rows = await sql`
       insert into app_users (email, display_name, password_hash, role)
       values (${email}, ${displayName}, ${passwordHash(password)}, ${role})
-      returning id, email, display_name, role
+      returning id, email, display_name, role, nickname, nickname_chosen
     `;
 
     const session = await createSession(rows[0].id);

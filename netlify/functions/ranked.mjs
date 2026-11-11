@@ -16,7 +16,8 @@ import {
  *   GET ?admin=1             (admins) { config, distribution }
  *   POST { action: "start", matchKey }                 -> { aiLevel, rank }    a ranked match against the computer
  *   POST { action: "report", matchKey, result, turns } -> { outcome, rank, state }  win | lose | draw (concede = lose)
- *   POST { action: "nickname", name }                  -> { rank }
+ *   POST { action: "start", matchKey, mode: "online" } -> online ranked: both players start the same key
+ *   POST { action: "nickname", name }                  -> { rank }  (the player's chosen public name)
  *   POST { action: "saveConfig", config }              (admins) -> { config }
  *   POST { action: "adjust", userId, points, note }    (admins) set a player's points by hand
  *   POST { action: "resetNickname", userId }           (admins) back to a generated name
@@ -59,12 +60,12 @@ export async function handler(event) {
     const cfg = await loadRanks(sql);
     switch (body.action) {
       case "start": {
-        const r = await startMatch(sql, user.id, cfg, body.matchKey);
+        const r = await startMatch(sql, user.id, cfg, body.matchKey, body.mode === "online" ? "online" : "ai");
         return json(200, { aiLevel: r.aiLevel, rank: await publicStatus(sql, user.id, cfg, r) });
       }
       case "report": {
         const r = await reportMatch(sql, user.id, cfg, body);
-        const paid = r.outcome.rewards?.length > 0 || r.seasonReward;
+        const paid = r.outcome.rewards?.length > 0 || r.seasonReward || r.confirmed?.some(c => c.rewards?.length);
         return json(200, { outcome: r.outcome, rank: await publicStatus(sql, user.id, cfg, r), ...(paid ? { state: await loadState(sql, user.id) } : {}) });
       }
       case "nickname": {
