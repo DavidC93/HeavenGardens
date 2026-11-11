@@ -3,7 +3,7 @@
 import { neon } from "@neondatabase/serverless";
 import { ensureStarter, loadState } from "../netlify/functions/_lib/economy.mjs";
 import {
-  DEFAULT_RANKS, adminAdjust, aiLevelFor, checkNickname, distribution, leaderboard, leagueOf, loadRank, normalizeRanks,
+  DEFAULT_RANKS, adminAdjust, aiLevelFor, checkLeagueStarts, checkNickname, distribution, leaderboard, leagueOf, loadRank, normalizeRanks,
   publicStatus, reportMatch, scoreMatch, seasonAt, seasonResetPoints, setNickname, startMatch, israelMonthStart
 } from "../netlify/functions/_lib/ranks.mjs";
 
@@ -35,6 +35,12 @@ check("mercy: 3 losses in a row, one level lower", aiLevelFor(cfg, s(800, -3)) =
 const bad = normalizeRanks({ leagues: [{ league: 2, min: 50 }, { league: 3, min: 10 }], cap: 1 });
 check("config: starts always grow, cap above the last", bad.leagues[2].min === 51 && bad.cap > bad.leagues[9].min);
 check("config: bundles cleaned", JSON.stringify(normalizeRanks({ leagues: [{ league: 2, reward: { coins: "70", packs: { premium: 99, nope: 3 } } }] }).leagues[1].reward) === '{"coins":70,"packs":{"premium":10}}');
+const throws = f => { try { f(); return false; } catch (e) { return e.statusCode === 400; } };
+const starts = mins => ({ leagues: DEFAULT_RANKS.leagues.map((l, i) => ({ league: l.league, min: mins[i] })) });
+check("save: the default starts pass", !throws(() => checkLeagueStarts(DEFAULT_RANKS)));
+check("save: an emptied league-2 start is refused", throws(() => checkLeagueStarts(starts([0, "", 450, 750, 1100, 1500, 1950, 2450, 3000, 3600]))));
+check("save: league 2 at 0 or 1 below league 1 is refused", throws(() => checkLeagueStarts(starts([0, 0, 450, 750, 1100, 1500, 1950, 2450, 3000, 3600]))));
+check("save: starts that do not grow are refused", throws(() => checkLeagueStarts(starts([0, 200, 450, 450, 1100, 1500, 1950, 2450, 3000, 3600]))));
 
 // ---- seasons
 const at = iso => seasonAt(cfg, Date.parse(iso));

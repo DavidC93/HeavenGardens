@@ -7,11 +7,14 @@ import { allCards, artUrl, findCard, kindOf } from "./cards.js";
 // The computer opponent: its decks (fixed cards, random rules, or both) and the 10 difficulty levels.
 const DECK_MIN = 30, DECK_MAX = 40, MAX_COPIES = 4, MIN_GODS = 1, MAX_GODS = 3;
 let data = null; // { levels: [{ level, maxGames, deckId }], decks: [{ id, name, config }] }
+let leagues = null; // the ranked leagues (each names the computer's level), or null when they could not load
 
 async function load() {
   const res = await api.get("ai-config?admin=1");
   if (!res.ok) throw new Error(res.data.error || "network");
   data = res.data;
+  const ranks = await api.get("ranked?admin=1");
+  leagues = ranks.ok ? ranks.data.config?.leagues || null : null;
 }
 
 // ------------------------------------------------------------------ overview: levels and decks
@@ -26,10 +29,14 @@ export async function renderAi(root) {
     const deck = h("select", { class: "input" },
       h("option", { value: "" }, t("aiBuiltIn")),
       data.decks.map(d => h("option", { value: d.id, selected: d.id === l.deckId }, d.name)));
+    const inLeagues = leagues ? leagues.filter(x => x.aiLevel === l.level) : null;
     return { level: l.level, games, deck, el: h("tr", {},
       h("td", {}, h("b", {}, t("aiLevel", l.level))),
-      h("td", {}, l.maxGames === null ? h("span", { class: "muted" }, t("aiAbove", data.levels[8].maxGames)) : h("div", { class: "games-cell" }, h("span", { class: "muted small" }, t("aiUpTo")), games, h("span", { class: "muted small" }, t("aiGames")))),
-      h("td", {}, deck)) };
+      h("td", {}, inLeagues === null ? h("span", { class: "muted" }, "—")
+        : inLeagues.length ? h("div", { class: "league-chips" }, inLeagues.map(x => h("span", { class: "badge" }, `${x.league}. ${x.he}`)))
+        : h("span", { class: "muted small" }, t("aiNoLeague"))),
+      h("td", {}, deck),
+      h("td", {}, l.maxGames === null ? h("span", { class: "muted small" }, t("aiAbove", data.levels[8].maxGames)) : h("div", { class: "games-cell" }, h("span", { class: "muted small" }, t("aiUpTo")), games, h("span", { class: "muted small" }, t("aiGames"))))) };
   });
   const saveLevels = h("button", { type: "button", class: "btn primary", onclick: async () => {
     saveLevels.disabled = true;
@@ -56,7 +63,9 @@ export async function renderAi(root) {
     h("section", { class: "panel" },
       h("h2", {}, t("aiLevelsTitle")),
       h("p", { class: "hint" }, t("aiLevelsHint")),
-      h("table", { class: "ai-levels" }, h("tbody", {}, rows.map(r => r.el))),
+      h("table", { class: "ai-levels" },
+        h("thead", {}, h("tr", {}, h("th", {}, t("aiColLevel")), h("th", {}, t("aiColLeagues")), h("th", {}, t("aiColDeck")), h("th", {}, t("aiColGuests")))),
+        h("tbody", {}, rows.map(r => r.el))),
       h("div", { class: "toolbar" }, saveLevels)),
     h("section", { class: "panel" },
       h("div", { class: "toolbar" }, h("h2", { class: "grow" }, t("aiDecksTitle")), h("a", { class: "btn primary", href: "#/ai/new" }, icon("plus"), t("aiNewDeck"))),

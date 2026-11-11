@@ -292,3 +292,5 @@ select.input { cursor: pointer; }
 table.mini { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
 table.mini td { padding: 4px 6px; border-bottom: 1px solid var(--line2); }
 @media (max-width: 640px) { .rank-bar-row { grid-template-columns: 110px 1fr 36px; } }
+.ai-levels th { text-align: start; padding: 4px 8px; font-size: 12px; font-weight: 600; color: var(--muted, #888); border-bottom: 1px solid var(--line2); }
+.league-chips { display: flex; flex-wrap: wrap; gap: 4px; }

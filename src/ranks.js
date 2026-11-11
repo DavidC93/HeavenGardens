@@ -77,6 +77,16 @@ export async function renderRanks(root) {
       }))
     };
     if (!/^\d{4}-\d{2}-01$/.test(cfg.firstSeasonStart)) { toast(t("ranksFirstOfMonth"), "error"); return; }
+    // An emptied number field reads as 0 and the server would quietly "fix" it (league 2 once started at 1).
+    const inputs = [...Object.values(g), ...rows.flatMap(({ f }) => [f.min, f.win, f.loss, f.aiPercent, f.aiLevel,
+      ...Object.values(f.reward), ...Object.values(f.seasonReward)])].filter(el => el.type === "number" && !el.disabled);
+    const empty = inputs.find(el => el.value.trim() === "" || !Number.isInteger(Number(el.value)));
+    if (empty) { empty.focus(); toast(t("ranksEmptyField"), "error"); return; }
+    for (let i = 1, previous = 0; i < rows.length; i++) {
+      const min = Number(rows[i].f.min.value);
+      if (min <= previous) { rows[i].f.min.focus(); toast(t("ranksStartOrder", rows[i].league, previous), "error"); return; }
+      previous = min;
+    }
     save.disabled = true;
     const r = await api.post("ranked", { action: "saveConfig", config: cfg });
     save.disabled = false;

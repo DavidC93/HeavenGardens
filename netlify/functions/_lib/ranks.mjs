@@ -112,7 +112,26 @@ export async function loadRanks(sql) {
   } catch { return normalizeRanks(null); }
 }
 
+/**
+ * A save must state every league's start, growing from league 2 (above 0). Loading still repairs a bad stored
+ * config, but a save never repairs silently: an emptied field once became "league 2 starts at 1".
+ */
+export function checkLeagueStarts(raw) {
+  const given = Array.isArray(raw?.leagues) ? raw.leagues : [];
+  let previous = 0;
+  for (const def of DEFAULT_RANKS.leagues) {
+    if (def.league === 1) continue;
+    const g = given.find(x => Number(x?.league) === def.league);
+    const v = g?.min;
+    const n = v === "" || v === null || v === undefined ? NaN : Number(v);
+    if (!Number.isInteger(n) || n <= previous)
+      throw httpError(400, "bad_league_start", `league ${def.league} must start above ${previous} points`);
+    previous = n;
+  }
+}
+
 export async function saveRanks(sql, raw, adminId) {
+  checkLeagueStarts(raw);
   const cfg = normalizeRanks(raw);
   await sql`
     insert into app_settings (key, value, updated_at, updated_by)
