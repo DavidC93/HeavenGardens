@@ -80,7 +80,7 @@ export function renderPlayerList(root) {
       bigStat(t("statPlayed"), fmt(s.played), "#c084fc"),
       bigStat(t("statNewWeek"), fmt(s.new_week), "#38bdf8"),
       bigStat(t("statPayers"), fmt(s.payers ?? 0), "#fb923c"),
-      bigStat(t("statRevenue"), usd(s.revenue), "#34d399", s.unknownPurchases ? t("unknownPurchasesNote", s.unknownPurchases) : null));
+      bigStat(t("statRevenue"), usd(s.revenue), "#34d399"));
     if (data.leagues && league.options.length === 1)
       league.append(...data.leagues.map(l => h("option", { value: String(l.league), selected: String(l.league) === lastLeague }, `${l.league} · ${l.he}`)),
         h("option", { value: "none", selected: lastLeague === "none" }, t("ranksNotRanked")));
@@ -177,11 +177,9 @@ const bigStat = (label, value, color, note) => h("div", { class: "big-stat", sty
 // ------------------------------------------------------------------ purchases and spending
 
 function purchasesPanel(store, spending) {
-  store = store || { purchases: [], total: 0, count: 0, tests: 0, unknown: 0, apples: 0 };
+  store = store || { purchases: [], total: 0, count: 0, tests: 0, apples: 0 };
   spending = spending || { packs: [], crafts: 0, deckSlots: { n: 0, apples: 0 }, coins: 0, apples: 0 };
-  const status = p => p.test === true ? h("span", { class: "badge test" }, t("purchaseTest"))
-    : p.test === false ? h("span", { class: "badge paid" }, t("purchasePaid"))
-    : h("span", { class: "badge unknown", title: t("purchaseUnknownHint") }, t("purchaseUnknown"));
+  const status = p => p.test === false ? h("span", { class: "badge paid" }, t("purchasePaid")) : h("span", { class: "badge test" }, t("purchaseTest"));
   const cost = (coins, apples) => [coins ? `${fmt(coins)} ${t("coins")}` : null, apples ? `${fmt(apples)} ${t("apples")}` : null].filter(Boolean).join(" + ") || "—";
   return h("section", { class: "panel" },
     h("h3", { class: "section" }, t("purchasesTitle")),
@@ -190,7 +188,7 @@ function purchasesPanel(store, spending) {
       miniStat(fmt(store.count), t("purchasesReal")),
       miniStat(fmt(store.apples), t("applesBought")),
       store.tests ? miniStat(fmt(store.tests), t("purchasesTests")) : null,
-      store.unknown ? miniStat(fmt(store.unknown), t("purchaseUnknown")) : null),
+),
     store.purchases.length === 0 ? h("div", { class: "muted" }, t("noPurchases")) :
       h("div", { class: "table-wrap" }, h("table", { class: "data-table" },
         h("thead", {}, h("tr", {}, h("th", {}, t("colDate")), h("th", {}, t("colProduct")), h("th", {}, t("colPrice")), h("th", {}, t("colStatus")), h("th", { class: "hide-sm" }, t("colOrder")))),

@@ -47,19 +47,18 @@ export async function handler(event) {
       const rows = await sql`
         select u.id, u.email, u.display_name, to_jsonb(u) ->> 'nickname' as nickname, u.role, u.created_at, w.coins, w.apples,
           pr.season as rank_season, pr.points as rank_points, pr.games as rank_games,
-          coalesce(b.products, '{}') as products, coalesce(b.tests, 0)::int as test_purchases, coalesce(b.unknown, 0)::int as unknown_purchases,
+          coalesce(b.products, '{}') as products, coalesce(b.tests, 0)::int as test_purchases,
           (to_jsonb(u) ->> 'last_seen_at')::timestamptz as last_seen_at, to_jsonb(u) ->> 'last_client' as last_client,
           coalesce(m.games, 0)::int as games, coalesce(m.wins, 0)::int as wins, m.last_match,
           (select string_agg(i.provider, ',') from user_identities i where i.user_id = u.id) as providers,
-          greatest((to_jsonb(u) ->> 'last_seen_at')::timestamptz, m.last_match,
-            (select max(s.created_at) from user_sessions s where s.user_id = u.id)) as last_active
+          greatest((to_jsonb(u) ->> 'last_seen_at')::timestamptz, m.last_match) as last_active
         from app_users u
         left join player_wallets w on w.user_id = u.id
         left join player_ranks pr on pr.user_id = u.id
         left join lateral (
           select array_agg(p.product_id) filter (where t.test is false) as products, sum(p.apples) filter (where t.test is false) as apples,
-            count(*) filter (where t.test) as tests, count(*) filter (where t.test is null) as unknown
-          from iap_purchases p cross join lateral (select (select (e.detail ->> 'test')::boolean from economy_events e where e.user_id = p.user_id and e.kind = 'purchase'
+            count(*) filter (where t.test is not false) as tests
+          from iap_purchases p cross join lateral (select (select coalesce((e.detail ->> 'test')::boolean, true) from economy_events e where e.user_id = p.user_id and e.kind = 'purchase'
             and e.created_at = p.created_at and e.detail ->> 'productId' = p.product_id limit 1) as test) t
           where p.user_id = u.id
         ) b on true
@@ -80,8 +79,7 @@ export async function handler(event) {
       const [stats] = await sql`
         with a as (
           select u.created_at, greatest((to_jsonb(u) ->> 'last_seen_at')::timestamptz,
-            (select max(r.created_at) from match_results r where r.user_id = u.id),
-            (select max(s.created_at) from user_sessions s where s.user_id = u.id)) as last_active,
+            (select max(r.created_at) from match_results r where r.user_id = u.id)) as last_active,
             exists (select 1 from match_results r where r.user_id = u.id) as played
           from app_users u
         )
@@ -92,15 +90,14 @@ export async function handler(event) {
           count(*) filter (where created_at > now() - interval '7 days')::int as new_week
         from a
       `;
-      // real purchases only: Google's test purchases (license testers) are marked; ones from before the mark are "unknown"
+      // real purchases only: Google's test purchases (license testers) are marked; the ones from before the mark were all tests
       const sales = await sql`
-        select p.product_id, p.user_id, t.test from iap_purchases p cross join lateral (select (select (e.detail ->> 'test')::boolean from economy_events e where e.user_id = p.user_id and e.kind = 'purchase'
+        select p.product_id, p.user_id, t.test from iap_purchases p cross join lateral (select (select coalesce((e.detail ->> 'test')::boolean, true) from economy_events e where e.user_id = p.user_id and e.kind = 'purchase'
             and e.created_at = p.created_at and e.detail ->> 'productId' = p.product_id limit 1) as test) t
       `;
       const real = sales.filter(r => r.test === false);
       stats.payers = new Set(real.map(r => r.user_id)).size;
       stats.revenue = money(real.reduce((sum, r) => sum + usdOf(r.product_id), 0));
-      stats.unknownPurchases = sales.filter(r => r.test == null).length;
       const cfg = await loadRanks(sql);
       const season = seasonAt(cfg);
       const players = rows.map(({ rank_season, rank_points, rank_games, products, ...p }) => ({
@@ -195,7 +192,7 @@ async function playerDetail(sql, id) {
     sql`select mode, result, count(*)::int as n from match_results where user_id = ${user.id} group by mode, result`,
     sql`select mode, result, turns, created_at from match_results where user_id = ${user.id} order by created_at desc limit 15`,
     // real-money purchases (the purchase event next to each one carries Google's test flag)
-    sql`select p.product_id, p.order_id, p.apples, p.store, p.created_at, (e.detail ->> 'test')::boolean as test
+    sql`select p.product_id, p.order_id, p.apples, p.store, p.created_at, coalesce((e.detail ->> 'test')::boolean, true) as test
       from iap_purchases p
       left join lateral (select detail from economy_events e where e.user_id = p.user_id and e.kind = 'purchase'
         and e.created_at = p.created_at and e.detail ->> 'productId' = p.product_id limit 1) e on true
@@ -220,7 +217,7 @@ async function playerDetail(sql, id) {
     apples: packs.reduce((s, p) => s + p.apples, 0) + (slots?.apples || 0)
   };
   const store = { purchases: bought, total: money(paid.reduce((s, p) => s + p.usd, 0)), count: paid.length,
-    tests: bought.filter(p => p.test === true).length, unknown: bought.filter(p => p.test == null).length,
+    tests: bought.length - paid.length,
     apples: paid.reduce((s, p) => s + p.apples, 0) };
   const ranks = await loadRanks(sql);
   const rank = await playerRank(sql, ranks, user.id);
