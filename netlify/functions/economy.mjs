@@ -61,8 +61,8 @@ export async function handler(event) {
       case "purchase": {
         const productId = String(body.productId || "");
         const purchaseToken = String(body.purchaseToken || "");
-        const { orderId } = await verifyPlayPurchase(productId, purchaseToken);
-        result = await grantPurchase(sql, user.id, { productId, purchaseToken, orderId });
+        const { orderId, testPurchase } = await verifyPlayPurchase(productId, purchaseToken);
+        result = await grantPurchase(sql, user.id, { productId, purchaseToken, orderId, test: testPurchase });
         break;
       }
       case "adStart":

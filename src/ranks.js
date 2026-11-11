@@ -43,14 +43,14 @@ export async function renderRanks(root) {
     };
     return { league: l.league, f, el: [
       h("tr", { class: "rank-row" },
-        h("td", { rowspan: "2" }, h("b", {}, String(l.league))),
-        h("td", {}, f.he, f.en),
-        h("td", {}, f.min),
-        h("td", {}, f.win),
-        h("td", {}, f.loss),
-        h("td", {}, h("label", { class: "check" }, f.floor, t("ranksFloor")), h("label", { class: "check" }, f.streak, t("ranksStreak"))),
-        h("td", {}, f.aiPercent),
-        h("td", {}, f.aiLevel)),
+        h("td", { rowspan: "2", class: "rank-num" }, h("b", {}, String(l.league))),
+        h("td", { class: "rank-names", "data-label": t("ranksName") }, f.he, f.en),
+        h("td", { "data-label": t("ranksMin") }, f.min),
+        h("td", { "data-label": t("ranksWin") }, f.win),
+        h("td", { "data-label": t("ranksLoss") }, f.loss),
+        h("td", { class: "rank-rules", "data-label": t("ranksRules") }, h("label", { class: "check" }, f.floor, t("ranksFloor")), h("label", { class: "check" }, f.streak, t("ranksStreak"))),
+        h("td", { "data-label": t("ranksAiPercent") }, f.aiPercent),
+        h("td", { "data-label": t("ranksAiLevel") }, f.aiLevel)),
       h("tr", { class: "rank-rewards" },
         h("td", { colspan: "7" },
           h("div", { class: "reward-pair" },
@@ -136,7 +136,7 @@ export function rankPanel(userId, rank, nickname, leagues, onChange) {
   } }, t("ranksResetNick"));
 
   return h("section", { class: "panel" },
-    h("h2", {}, t("ranksPlayerTitle")),
+    h("h3", { class: "section" }, t("ranksPlayerTitle")),
     h("div", { class: "kv" }, h("span", {}, t("ranksNickname")), h("span", {}, nickname || t("ranksNoNick"), " ", nickname ? reset : null)),
     rank ? [
       h("div", { class: "kv" }, h("span", {}, t("ranksLeague")), h("span", {}, `${rank.league}. ${name(rank.league)} · ${rank.points} ${t("ranksPoints")}`)),

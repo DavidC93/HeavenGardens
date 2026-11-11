@@ -32,11 +32,11 @@ export async function renderAi(root) {
     const inLeagues = leagues ? leagues.filter(x => x.aiLevel === l.level) : null;
     return { level: l.level, games, deck, el: h("tr", {},
       h("td", {}, h("b", {}, t("aiLevel", l.level))),
-      h("td", {}, inLeagues === null ? h("span", { class: "muted" }, "—")
+      h("td", { "data-label": t("aiColLeagues") }, inLeagues === null ? h("span", { class: "muted" }, "—")
         : inLeagues.length ? h("div", { class: "league-chips" }, inLeagues.map(x => h("span", { class: "badge" }, `${x.league}. ${x.he}`)))
         : h("span", { class: "muted small" }, t("aiNoLeague"))),
-      h("td", {}, deck),
-      h("td", {}, l.maxGames === null ? h("span", { class: "muted small" }, t("aiAbove", data.levels[8].maxGames)) : h("div", { class: "games-cell" }, h("span", { class: "muted small" }, t("aiUpTo")), games, h("span", { class: "muted small" }, t("aiGames"))))) };
+      h("td", { "data-label": t("aiColDeck") }, deck),
+      h("td", { "data-label": t("aiColGuests") }, l.maxGames === null ? h("span", { class: "muted small" }, t("aiAbove", data.levels[8].maxGames)) : h("div", { class: "games-cell" }, h("span", { class: "muted small" }, t("aiUpTo")), games, h("span", { class: "muted small" }, t("aiGames"))))) };
   });
   const saveLevels = h("button", { type: "button", class: "btn primary", onclick: async () => {
     saveLevels.disabled = true;

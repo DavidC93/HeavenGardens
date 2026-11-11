@@ -496,7 +496,7 @@ export async function rewardMatch(sql, userId, body) {
  * Credits a store purchase that Google has confirmed. The purchase token is the key, so retries and replays pay
  * nothing more; a token already used by another account is refused.
  */
-export async function grantPurchase(sql, userId, { productId, purchaseToken, orderId = null, store = "google_play" }) {
+export async function grantPurchase(sql, userId, { productId, purchaseToken, orderId = null, store = "google_play", test = false }) {
   const product = ECONOMY.appleProducts.find(p => p.id === productId);
   if (!product) throw httpError(400, "unknown_product");
   const done = await sql`
@@ -513,7 +513,7 @@ export async function grantPurchase(sql, userId, { productId, purchaseToken, ord
     ),
     e as (
       insert into economy_events (user_id, kind, detail)
-      select ${userId}, 'purchase', ${JSON.stringify({ productId, orderId, apples: product.apples, store })}::jsonb from p
+      select ${userId}, 'purchase', ${JSON.stringify({ productId, orderId, apples: product.apples, store, test: !!test })}::jsonb from p
       returning 1
     )
     select apples from w

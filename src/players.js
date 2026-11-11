@@ -30,49 +30,100 @@ const freshness = date => !date ? "" : Date.now() - new Date(date).getTime() < 8
 const signInName = p => [p.providers?.includes("google_play") ? t("playGames") : null, p.email ? t("email") : null].filter(Boolean).join(" + ") || "—";
 const buildName = c => (c ? String(c).replace("android/", "") : "");
 
+/** One color per league (1 = Arcadia … 10 = Heaven Gardens), for the shield chips. */
+const LEAGUE_COLORS = ["#a3a3b8", "#5eead4", "#facc15", "#86efac", "#f0abfc", "#93c5fd", "#fca5a5", "#c4b5fd", "#fdba74", "#ffd27a"];
+export const leagueColor = n => LEAGUE_COLORS[Math.max(0, Math.min(9, (n || 1) - 1))];
+const usd = n => "$" + Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** "3 · El Dorado / 520 points" chip; muted "not ranked yet" without a rank. */
+function leagueChip(rank, big = false) {
+  if (!rank) return h("div", { class: "league-chip none" + (big ? " big" : "") }, h("span", { class: "league-shield" }, icon("shield", big ? 22 : 16)),
+    h("div", {}, h("div", { class: "league-name" }, t("ranksNotRanked")), h("div", { class: "league-pts" }, "—")));
+  return h("div", { class: "league-chip" + (big ? " big" : ""), style: { "--lc": leagueColor(rank.league) }, title: `${t("ranksLeague")} ${rank.league}` },
+    h("span", { class: "league-shield" }, h("b", {}, String(rank.league))),
+    h("div", { class: "league-text" },
+      h("div", { class: "league-name" }, rank.he || `${t("ranksLeague")} ${rank.league}`),
+      h("div", { class: "league-pts" }, t("seasonPoints", fmt(rank.points)))));
+}
+
+const initial = p => String(p.display_name || p.nickname || p.email || "?").trim().charAt(0).toUpperCase() || "?";
+
+let lastLeague = "";
+
 export function renderPlayerList(root) {
   clear(root);
   const stats = h("div", { class: "stat-row" });
   const list = h("div", { class: "player-list" });
-  const search = h("input", { type: "search", class: "input grow", placeholder: t("searchPlayers"), value: lastQuery });
+  const count = h("div", { class: "muted small list-count" });
+  const search = h("input", { type: "search", class: "input", placeholder: t("searchPlayers"), value: lastQuery });
   const sort = h("select", { class: "input", "aria-label": t("sortBy"), onchange: () => { lastSort = sort.value; run(); } },
-    ["recent", "new", "games"].map(v => h("option", { value: v, selected: v === lastSort }, t("sort." + v))));
-  let timer;
+    ["recent", "new", "games", "points", "spent"].map(v => h("option", { value: v, selected: v === lastSort }, t("sort." + v))));
+  const league = h("select", { class: "input", "aria-label": t("ranksLeague"), onchange: () => { lastLeague = league.value; fill(); } },
+    h("option", { value: "" }, t("allLeagues")));
+  let timer, data = null;
   search.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(run, 300); });
-  root.append(h("div", { class: "toolbar wrap" }, h("div", { class: "search-box grow" }, icon("search"), search), sort), stats, list,
-    h("div", { class: "hint" }, t("playersHint")));
+  root.append(
+    h("div", { class: "toolbar wrap players-toolbar" }, h("div", { class: "search-box grow" }, icon("search"), search), h("div", { class: "toolbar-selects" }, league, sort)),
+    stats, count, list, h("div", { class: "hint" }, t("playersHint")));
 
   async function run() {
     lastQuery = search.value.trim();
     list.replaceChildren(h("div", { class: "muted" }, t("loading")));
     const res = await api.get(`admin-players?q=${encodeURIComponent(lastQuery)}&sort=${lastSort}`);
-    clear(list);
-    if (!res.ok) { list.append(h("div", { class: "empty" }, t("networkError"))); return; }
-    const s = res.data.stats;
+    if (!res.ok) { list.replaceChildren(h("div", { class: "empty" }, t("networkError"))); return; }
+    data = res.data;
+    const s = data.stats;
     if (s) stats.replaceChildren(
       bigStat(t("statTotal"), fmt(s.total), "#9db4ff"),
       bigStat(t("statDay"), fmt(s.day), "#4ade80"),
       bigStat(t("statWeek"), fmt(s.week), "#facc15"),
       bigStat(t("statPlayed"), fmt(s.played), "#c084fc"),
-      bigStat(t("statNewWeek"), fmt(s.new_week), "#38bdf8"));
-    if (res.data.players.length === 0) list.append(h("div", { class: "empty" }, t("noPlayers")));
-    for (const p of res.data.players)
-      list.append(h("a", { class: "player-row", href: `#/players/${p.id}` },
-        h("span", { class: "dot " + freshness(p.last_active), title: p.last_active ? new Date(p.last_active).toLocaleString("he-IL") : t("neverSeen") }),
-        h("div", { class: "grow" },
-          h("div", { class: "player-name" }, p.display_name || p.email || p.id, p.role === "admin" ? h("span", { class: "badge" }, t("roleAdmin")) : null),
-          h("div", { class: "muted small", dir: "ltr" }, playerCode(p.id), p.email ? " · " + p.email : ""),
-          h("div", { class: "player-meta small" },
-            h("span", {}, signInName(p)),
-            h("span", {}, t("lastActive"), " ", h("b", {}, ago(p.last_active))),
-            h("span", {}, t("gamesCount", p.games, p.wins)),
-            p.last_client ? h("span", { dir: "ltr" }, "build ", buildName(p.last_client)) : null)),
-        h("div", { class: "wallet" },
-          h("span", { class: "coin" }, icon("coin", 14), fmt(p.coins)),
-          h("span", { class: "apple" }, fmt(p.apples), " ", t("apples")))));
+      bigStat(t("statNewWeek"), fmt(s.new_week), "#38bdf8"),
+      bigStat(t("statPayers"), fmt(s.payers ?? 0), "#fb923c"),
+      bigStat(t("statRevenue"), usd(s.revenue), "#34d399", s.unknownPurchases ? t("unknownPurchasesNote", s.unknownPurchases) : null));
+    if (data.leagues && league.options.length === 1)
+      league.append(...data.leagues.map(l => h("option", { value: String(l.league), selected: String(l.league) === lastLeague }, `${l.league} · ${l.he}`)),
+        h("option", { value: "none", selected: lastLeague === "none" }, t("ranksNotRanked")));
+    fill();
+  }
+
+  function fill() {
+    if (!data) return;
+    const shown = data.players.filter(p => !lastLeague || (lastLeague === "none" ? !p.rank : String(p.rank?.league) === lastLeague));
+    count.textContent = t("playersShown", shown.length, data.players.length);
+    if (shown.length === 0) { list.replaceChildren(h("div", { class: "empty" }, t("noPlayers"))); return; }
+    list.replaceChildren(...shown.map(playerCard));
   }
   run();
 }
+
+function playerCard(p) {
+  const fresh = freshness(p.last_active);
+  const winRate = p.games ? Math.round((p.wins / p.games) * 100) : null;
+  const nick = p.nickname && p.nickname !== p.display_name ? p.nickname : null;
+  return h("a", { class: "pcard", href: `#/players/${p.id}` },
+    h("div", { class: "pcard-id" },
+      h("span", { class: "avatar " + fresh, title: p.last_active ? new Date(p.last_active).toLocaleString("he-IL") : t("neverSeen") }, initial(p)),
+      h("div", { class: "grow" },
+        h("div", { class: "pcard-name" },
+          h("span", { class: "ellipsis" }, p.display_name || p.nickname || p.email || p.id),
+          p.role === "admin" ? h("span", { class: "badge" }, t("roleAdmin")) : null,
+          p.spent > 0 ? h("span", { class: "badge payer", title: t("purchasesCount", p.purchases) }, usd(p.spent)) : null),
+        nick ? h("div", { class: "pcard-sub" }, t("nicknameShort"), " ", h("b", {}, nick)) : null,
+        h("div", { class: "pcard-sub ellipsis", dir: "ltr" }, playerCode(p.id), p.email ? " · " + p.email : ""))),
+    leagueChip(p.rank),
+    h("div", { class: "pcard-facts" },
+      fact(t("factWins"), p.games ? t("winsOf", fmt(p.wins), fmt(p.games), winRate) : t("noGamesShort")),
+      fact(t("factActive"), ago(p.last_active), null, fresh),
+      fact(t("factLogin"), signInName(p)),
+      fact(t("factBuild"), buildName(p.last_client) || "—", null, "", "ltr")),
+    h("div", { class: "pcard-wallet" },
+      h("span", { class: "coin" }, icon("coin", 14), fmt(p.coins)),
+      h("span", { class: "apple" }, icon("apple", 14), fmt(p.apples))));
+}
+
+const fact = (label, value, title, cls = "", dir) =>
+  h("div", { class: "fact", title: title || undefined }, h("span", { class: "fact-label" }, label), h("span", { class: "fact-value " + cls, dir }, value));
 
 export async function renderPlayer(root, id) {
   clear(root).append(h("div", { class: "muted" }, t("loading")));
@@ -82,27 +133,34 @@ export async function renderPlayer(root, id) {
 
   function show(data) {
     const { player, state, events, matchTotals = [], matches = [] } = data;
+    const leagueName = n => data.leagues?.find(l => l.league === n)?.he;
+    const rank = data.rank ? { ...data.rank, he: leagueName(data.rank.league) } : null;
+    const copyBtn = (text, label) => h("button", { type: "button", class: "btn ghost small", dir: "ltr", onclick: e => { e.preventDefault(); navigator.clipboard?.writeText(text); toast(t("copied")); } }, icon("copy", 14), label);
     clear(root);
     root.append(
-      h("div", { class: "toolbar" },
-        h("a", { class: "btn ghost", href: "#/players" }, icon("back"), t("back")),
-        h("h2", { class: "grow title-sm" }, player.display_name || player.email || player.id)),
-      h("div", { class: "panel" },
-        h("div", { class: "kv" }, h("span", {}, t("email")), h("span", { dir: "ltr" }, player.email || "—")),
-        h("div", { class: "kv" }, h("span", {}, t("signIn")), h("span", {}, signInName({ ...player, providers: (player.providers || []).join(",") }))),
-        h("div", { class: "kv" }, h("span", {}, t("joined")), h("span", {}, new Date(player.created_at).toLocaleDateString("he-IL"))),
-        h("div", { class: "kv" }, h("span", {}, t("lastSeen")), h("span", { title: player.last_seen_at ? new Date(player.last_seen_at).toLocaleString("he-IL") : "" }, player.last_seen_at ? ago(player.last_seen_at) : t("notSeenYet"))),
-        h("div", { class: "kv" }, h("span", {}, t("appBuild")), h("span", { dir: "ltr" }, buildName(player.last_client) || "—")),
-        h("div", { class: "kv" }, h("span", {}, t("playerCode")),
-          h("button", { type: "button", class: "btn ghost small", dir: "ltr", onclick: () => { navigator.clipboard?.writeText(playerCode(player.id)); toast(t("copied")); } },
-            icon("copy", 14), playerCode(player.id))),
-        h("div", { class: "kv" }, h("span", {}, t("id")),
-          h("button", { type: "button", class: "btn ghost small", dir: "ltr", onclick: () => { navigator.clipboard?.writeText(player.id); toast(t("copied")); } },
-            icon("copy", 14), player.id.slice(0, 8) + "…"))),
+      h("div", { class: "toolbar" }, h("a", { class: "btn ghost", href: "#/players" }, icon("back"), t("back"))),
+      h("section", { class: "panel hero" },
+        h("div", { class: "hero-top" },
+          h("span", { class: "avatar big " + freshness(player.last_seen_at) }, initial(player)),
+          h("div", { class: "grow" },
+            h("h2", { class: "hero-name" }, h("span", { class: "ellipsis" }, player.display_name || player.email || player.id),
+              player.role === "admin" ? h("span", { class: "badge" }, t("roleAdmin")) : null),
+            player.nickname ? h("div", { class: "muted" }, t("nicknameShort"), " ", h("b", {}, player.nickname)) : null,
+            h("div", { class: "hero-ids" }, copyBtn(playerCode(player.id), playerCode(player.id)), copyBtn(player.id, t("id") + " " + player.id.slice(0, 8) + "…"))),
+          leagueChip(rank, true)),
+        h("div", { class: "info-grid" },
+          info(t("email"), player.email || "—", "ltr"),
+          info(t("signIn"), signInName({ ...player, providers: (player.providers || []).join(",") })),
+          info(t("joined"), new Date(player.created_at).toLocaleDateString("he-IL")),
+          info(t("lastSeen"), player.last_seen_at ? ago(player.last_seen_at) : t("notSeenYet")),
+          info(t("appBuild"), buildName(player.last_client) || "—", "ltr"),
+          info(t("ranksBestShort"), rank ? `${rank.best} · ${leagueName(rank.best) || ""}` : "—"))),
       h("div", { class: "stat-row" },
         bigStat(t("coins"), fmt(state.coins), "#ffd04d"),
         bigStat(t("apples"), fmt(state.apples), "#ffb547"),
+        bigStat(t("spentMoney"), usd(data.store?.total), "#34d399"),
         ...rules.rarities.map(r => bigStat(`${t("shards")} · ${rarityName(r.id)}`, fmt(state.shards[r.id]), RARITY_COLORS[r.id]))),
+      purchasesPanel(data.store, data.spending),
       activityPanel(matchTotals, matches),
       rankPanel(player.id, data.rank, player.nickname, data.leagues, () => renderPlayer(root, id)),
       grantPanel(player.id, show),
@@ -111,7 +169,53 @@ export async function renderPlayer(root, id) {
   }
 }
 
-const bigStat = (label, value, color) => h("div", { class: "big-stat", style: { "--c": color } }, h("div", { class: "big-value" }, value), h("div", { class: "muted small" }, label));
+const info = (label, value, dir) => h("div", { class: "info" }, h("div", { class: "info-label" }, label), h("div", { class: "info-value", dir }, value));
+
+const bigStat = (label, value, color, note) => h("div", { class: "big-stat", style: { "--c": color } },
+  h("div", { class: "big-value" }, value), h("div", { class: "muted small" }, label), note ? h("div", { class: "hint small" }, note) : null);
+
+// ------------------------------------------------------------------ purchases and spending
+
+function purchasesPanel(store, spending) {
+  store = store || { purchases: [], total: 0, count: 0, tests: 0, unknown: 0, apples: 0 };
+  spending = spending || { packs: [], crafts: 0, deckSlots: { n: 0, apples: 0 }, coins: 0, apples: 0 };
+  const status = p => p.test === true ? h("span", { class: "badge test" }, t("purchaseTest"))
+    : p.test === false ? h("span", { class: "badge paid" }, t("purchasePaid"))
+    : h("span", { class: "badge unknown", title: t("purchaseUnknownHint") }, t("purchaseUnknown"));
+  const cost = (coins, apples) => [coins ? `${fmt(coins)} ${t("coins")}` : null, apples ? `${fmt(apples)} ${t("apples")}` : null].filter(Boolean).join(" + ") || "—";
+  return h("section", { class: "panel" },
+    h("h3", { class: "section" }, t("purchasesTitle")),
+    h("div", { class: "mini-stats" },
+      miniStat(usd(store.total), t("purchasesTotal")),
+      miniStat(fmt(store.count), t("purchasesReal")),
+      miniStat(fmt(store.apples), t("applesBought")),
+      store.tests ? miniStat(fmt(store.tests), t("purchasesTests")) : null,
+      store.unknown ? miniStat(fmt(store.unknown), t("purchaseUnknown")) : null),
+    store.purchases.length === 0 ? h("div", { class: "muted" }, t("noPurchases")) :
+      h("div", { class: "table-wrap" }, h("table", { class: "data-table" },
+        h("thead", {}, h("tr", {}, h("th", {}, t("colDate")), h("th", {}, t("colProduct")), h("th", {}, t("colPrice")), h("th", {}, t("colStatus")), h("th", { class: "hide-sm" }, t("colOrder")))),
+        h("tbody", {}, store.purchases.map(p => h("tr", {},
+          h("td", { class: "nowrap", dir: "ltr" }, new Date(p.created_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })),
+          h("td", {}, t("applesN", fmt(p.apples))),
+          h("td", { dir: "ltr", class: "nowrap" }, usd(p.usd)),
+          h("td", {}, status(p)),
+          h("td", { class: "hide-sm small muted", dir: "ltr" }, p.order_id || "—")))))),
+    h("div", { class: "hint" }, t("purchasesHint")),
+    h("h3", { class: "section" }, t("spendingTitle")),
+    h("div", { class: "mini-stats" },
+      miniStat(fmt(spending.coins), t("coinsSpent")),
+      miniStat(fmt(spending.apples), t("applesSpent"))),
+    h("div", { class: "spend-list" },
+      spending.packs.map(p => h("div", { class: "spend-row" },
+        h("span", { class: "grow" }, t("pack." + p.pack) === "pack." + p.pack ? p.pack : t("pack." + p.pack), " × ", h("b", {}, fmt(p.n))),
+        h("span", { class: "muted small" }, cost(p.coins, p.apples)))),
+      spending.deckSlots.n ? h("div", { class: "spend-row" }, h("span", { class: "grow" }, t("deckSlotsBought"), " × ", h("b", {}, fmt(spending.deckSlots.n))),
+        h("span", { class: "muted small" }, cost(0, spending.deckSlots.apples))) : null,
+      spending.crafts ? h("div", { class: "spend-row" }, h("span", { class: "grow" }, t("event.craft"), " × ", h("b", {}, fmt(spending.crafts))), h("span", { class: "muted small" }, t("shards"))) : null,
+      !spending.packs.length && !spending.deckSlots.n && !spending.crafts ? h("div", { class: "muted" }, t("noSpending")) : null));
+}
+
+const miniStat = (value, label) => h("div", { class: "mini-stat" }, h("b", {}, value), h("span", { class: "muted small" }, label));
 
 // ------------------------------------------------------------------ activity
 
