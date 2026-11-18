@@ -6,7 +6,8 @@ import { leagueOf, seasonAt } from "./ranks.mjs";
 // public profile (nickname only, never the sign-in name or email).
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const KIND_OF = r => r.kind || (r.mode === "online" ? "casual" : "practice");
+// a ranked start's key ("rk-…") is always ranked: games logged before the kind was stored, or by a build that sent none
+const KIND_OF = r => (r.match_key?.startsWith("rk-") ? "ranked" : r.kind) || (r.mode === "online" ? "casual" : "practice");
 
 function totals(rows) {
   const blank = () => ({ games: 0, wins: 0, losses: 0, draws: 0 });
@@ -83,7 +84,7 @@ export async function myStats(sql, cfg, userId) {
   const [user] = await sql`select nickname, created_at from app_users where id = ${userId}`;
   if (!user) throw httpError(404, "not_found");
   const [grouped, order, speed, rank, coll, recent] = await Promise.all([
-    sql`select mode, kind, result, count(*)::int as n from match_results where user_id = ${userId} and mode in ('ai', 'online') group by mode, kind, result`,
+    sql`select mode, case when match_key like 'rk-%' then 'ranked' else kind end as kind, result, count(*)::int as n from match_results where user_id = ${userId} and mode in ('ai', 'online') group by 1, 2, 3`,
     sql`select result from match_results where user_id = ${userId} and mode in ('ai', 'online') order by created_at desc limit 500`,
     sql`select min(turns) filter (where result = 'win' and turns > 0)::int as fastest, round(avg(turns))::int as average
       from match_results where user_id = ${userId} and mode in ('ai', 'online')`,
@@ -142,7 +143,7 @@ export async function publicProfile(sql, cfg, targetId) {
   const [user] = await sql`select nickname, created_at, ugs_player_id from app_users where id = ${id}`;
   if (!user) throw httpError(404, "not_found");
   const [grouped, order, speed, rank, coll] = await Promise.all([
-    sql`select mode, kind, result, count(*)::int as n from match_results where user_id = ${id} and mode in ('ai', 'online') group by mode, kind, result`,
+    sql`select mode, case when match_key like 'rk-%' then 'ranked' else kind end as kind, result, count(*)::int as n from match_results where user_id = ${id} and mode in ('ai', 'online') group by 1, 2, 3`,
     sql`select result from match_results where user_id = ${id} and mode in ('ai', 'online') order by created_at desc limit 500`,
     sql`select min(turns) filter (where result = 'win' and turns > 0)::int as fastest from match_results where user_id = ${id} and mode in ('ai', 'online')`,
     rankOf(sql, cfg, id),

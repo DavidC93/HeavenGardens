@@ -418,14 +418,19 @@ export const MATCH_KINDS = ["practice", "ranked", "casual", "friend"];
  * log it under the same key, which tells each who the other was. Works on older databases (fewer columns).
  */
 async function recordMatch(sql, userId, matchKey, mode, result, turns, extra = {}) {
-  const kind = MATCH_KINDS.includes(extra.kind) ? extra.kind : mode === "online" ? "casual" : "practice";
+  // a key from a ranked start is a ranked game whatever the app said (older builds sent no kind)
+  const kind = matchKey.startsWith("rk-") ? "ranked" : MATCH_KINDS.includes(extra.kind) ? extra.kind : mode === "online" ? "casual" : "practice";
   const opponent = extra.opponentName ? String(extra.opponentName).slice(0, 40) : null;
   const aiLevel = Number.isInteger(extra.aiLevel) && extra.aiLevel >= 1 && extra.aiLevel <= 10 ? extra.aiLevel : null;
   try {
     await sql`
       insert into match_results (user_id, match_key, mode, result, turns, kind, opponent_name, ai_level)
       values (${userId}, ${matchKey}, ${mode}, ${result}, ${turns}, ${kind}, ${opponent}, ${aiLevel})
-      on conflict (user_id, match_key) do nothing
+      on conflict (user_id, match_key) do update set
+        opponent_name = coalesce(match_results.opponent_name, excluded.opponent_name),
+        ai_level = coalesce(match_results.ai_level, excluded.ai_level),
+        turns = greatest(match_results.turns, excluded.turns),
+        kind = case when match_results.kind = 'ranked' then 'ranked' else coalesce(match_results.kind, excluded.kind) end
     `;
   } catch {
     try {

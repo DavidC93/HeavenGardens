@@ -342,7 +342,7 @@ async function closeWithoutPoints(sql, userId, matchKey, result, turns) {
  * as a loss. Pays the rewards of every league newly reached this season. Returns { row, outcome } or null.
  */
 async function finishMatch(sql, userId, cfg, row, matchKey, result, turns, season) {
-  const [m0] = await sql`select mode from ranked_matches where user_id = ${userId} and match_key = ${matchKey}`;
+  const [m0] = await sql`select mode, ai_level from ranked_matches where user_id = ${userId} and match_key = ${matchKey}`;
   const mode = m0?.mode === "online" ? "online" : "ai";
   const score = scoreMatch(cfg, row, { result: result === "abandoned" ? "lose" : result, turns, mode });
   const league = leagueOf(cfg, score.points).league;
@@ -363,6 +363,9 @@ async function finishMatch(sql, userId, cfg, row, matchKey, result, turns, seaso
   `;
   if (!rows.length) return null;
   const next = numRow(rows[0]);
+  // every ranked game is in the statistics, also one that never reported (the app was closed): the app's own log of it,
+  // when it comes, adds the opponent's name
+  await logRankedGame(sql, userId, matchKey, mode, result, turns, m0?.ai_level);
   const rewards = [];
   for (let n = row.best_league + 1; n <= league; n++) {
     const l = cfg.leagues.find(x => x.league === n);
@@ -375,6 +378,17 @@ async function finishMatch(sql, userId, cfg, row, matchKey, result, turns, seaso
     row: next,
     outcome: { matchKey, result, delta: score.delta, counted: score.counted, points: score.points, league, leagueBefore: before, promoted: league > before, rewards }
   };
+}
+
+async function logRankedGame(sql, userId, matchKey, mode, result, turns, aiLevel) {
+  const logged = result === "win" ? "win" : result === "draw" ? "draw" : "lose";
+  try {
+    await sql`
+      insert into match_results (user_id, match_key, mode, result, turns, kind, ai_level)
+      values (${userId}, ${matchKey}, ${mode}, ${logged}, ${turns}, 'ranked', ${mode === "ai" ? aiLevel ?? null : null})
+      on conflict (user_id, match_key) do update set kind = 'ranked'
+    `;
+  } catch (e) { console.warn("match_results unavailable", e.message); }
 }
 
 /** Another player's rank row, for settling their side of an online game. */

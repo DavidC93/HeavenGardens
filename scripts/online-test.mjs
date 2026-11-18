@@ -103,11 +103,13 @@ try {
   const last = stats.recent.find(g => g.kind === "casual");
   check("recent games: the online opponent's nickname and account", last?.opponent?.name === "Beta Tester" && last.opponent.id === b);
   check("recent games: the computer game keeps its level", stats.recent.some(g => g.mode === "ai" && g.aiLevel === 2));
-  check("totals: by kind and mode, draws counted", stats.totals.byKind.casual.wins === 1 && stats.totals.byKind.friend.draws === 1 && stats.totals.all.games === 3 && stats.totals.online.games === 2);
+  check("totals: by kind and mode, draws counted", stats.totals.byKind.casual.wins === 1 && stats.totals.byKind.friend.draws === 1 && stats.totals.byKind.practice.games === 1 && stats.totals.byKind.casual.games === 1);
+  const [{ finished }] = await sql`select count(*)::int as finished from ranked_matches where user_id = ${a} and finished_at is not null and result in ('win', 'lose', 'draw', 'abandoned')`;
+  check("every finished ranked game is in the statistics, also the ones that never reported", stats.totals.byKind.ranked.games === finished && finished > 0);
   check("collection: owned out of the catalog, by kind and rarity", stats.collection.owned > 0 && stats.collection.total >= stats.collection.owned && stats.collection.byKind.monster.total > 0);
   check("rank in the statistics", stats.rank.points === await points(a) && stats.rank.place >= 1);
   const prof = await publicProfile(sql, cfg, b);
-  check("a public profile: nickname, rank and record, never the sign-in name", prof.nickname === "Beta Tester" && prof.totals.online.games === 1 && !JSON.stringify(prof).includes("Real Name") && !JSON.stringify(prof).includes("@example"));
+  check("a public profile: nickname, rank and record, never the sign-in name", prof.nickname === "Beta Tester" && prof.totals.online.games >= 1 && prof.totals.all.games === prof.totals.online.games + prof.totals.ai.games && !JSON.stringify(prof).includes("Real Name") && !JSON.stringify(prof).includes("@example"));
   check("a bad profile id is refused", await code(publicProfile(sql, cfg, "nope")) === "bad_user");
   const board = await leaderboard(sql, cfg, a);
   check("the leaderboard rows carry the player's id (to open a profile)", board.top.some(r => r.id === a && r.me));

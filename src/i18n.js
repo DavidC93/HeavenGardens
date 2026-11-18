@@ -282,6 +282,22 @@ const he = {
   ranksSetPoints: "קביעה",
   ranksAdjusted: (a, b) => `הנקודות שונו מ־${a} ל־${b}`,
   rankResult: { win: "ניצחון", lose: "הפסד", draw: "תיקו", abandoned: "עזב (הפסד)", open: "במשחק" },
+  supportTab: "פניות",
+  supportTitle: "פניות לשירות",
+  supportHint: "הודעות שהשחקנים שלחו ממסך העזרה במשחק. אפשר לענות במייל שהשאירו, ולסמן ״טופל״ כשהעניין סגור.",
+  supportEmpty: "אין פניות כאן.",
+  support: {
+    open: "פתוחות",
+    done: "טופלו",
+    all: "הכול",
+    markDone: "סמן כטופל",
+    reopen: "פתח מחדש",
+    profile: "פרופיל השחקן",
+    guest: "אורח (לא מחובר)",
+    noEmail: "לא השאיר מייל",
+    copyEmail: "העתק מייל",
+    handledBy: "טופל על ידי",
+  },
 };
 
 let table = he;

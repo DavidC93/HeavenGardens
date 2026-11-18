@@ -20,6 +20,7 @@ export const LIMITS = {
   adCallback: { limit: 120, windowSeconds: 60 },     // per IP (AdMob's servers)
   ranked: { limit: 60, windowSeconds: 60 },          // per user (the leaderboard: per IP for guests)
   profile: { limit: 60, windowSeconds: 60 },         // per user: statistics and profiles
+  support: { limit: 5, windowSeconds: 3600 },         // per IP: messages to support
   matchSync: { limit: 300, windowSeconds: 60 },      // per IP: a match on the server mailbox asks about once a second (two phones may share Wi-Fi)
 };
 

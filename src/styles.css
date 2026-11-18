@@ -461,3 +461,11 @@ table.mini td { padding: 4px 6px; border-bottom: 1px solid var(--line2); }
   .bundle { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .bundle .input.num { max-width: none; }
 }
+
+/* ---------------------------------------------------------------- support messages */
+.support-list { display: flex; flex-direction: column; gap: 10px; }
+.support-card { margin: 0; }
+.support-card.done { opacity: 0.72; }
+.support-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.support-message { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0; padding: 10px 12px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line2); font-size: 15px; line-height: 1.5; }
+.support-meta { display: flex; flex-wrap: wrap; gap: 2px; }

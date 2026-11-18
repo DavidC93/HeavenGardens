@@ -10,9 +10,11 @@ export async function handler(event) {
     const body = await readJson(event);
     const email = normalizeEmail(body.email);
     const password = String(body.password || "");
-    const displayName = String(body.displayName || email.split("@")[0] || "Player").trim();
+    // plain text of a sane length: no control characters, no tags
+    const displayName = String(body.displayName || email.split("@")[0] || "Player").replace(/[\u0000-\u001f\u007f<>]/g, "").trim().slice(0, 40) || "Player";
 
-    if (!email.includes("@")) return json(400, { error: "invalid_email" });
+    if (!email.includes("@") || email.length > 200) return json(400, { error: "invalid_email" });
+    if (password.length > 200) return json(400, { error: "weak_password", message: "Password is too long." });
     if (password.length < 8) return json(400, { error: "weak_password", message: "Password must be at least 8 characters." });
 
     const sql = db();
