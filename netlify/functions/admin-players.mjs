@@ -1,5 +1,5 @@
 import { db } from "./_lib/db.mjs";
-import { requireAdmin } from "./_lib/auth.mjs";
+import { passwordHash, requireAdmin } from "./_lib/auth.mjs";
 import { handleError, json, methodNotAllowed, readJson } from "./_lib/http.mjs";
 import { rateLimit } from "./_lib/ratelimit.mjs";
 import { ECONOMY, RARITIES, ensureStarter, httpError, loadCatalog, loadState, maxCopiesOf } from "./_lib/economy.mjs";
@@ -12,6 +12,9 @@ import { leagueOf, loadRanks, playerRank, seasonAt, seasonResetPoints } from "./
  *   GET  ?id=<user id>      the player: account, wallet, collection, shards, purchases, spending, recent history
  *   POST { action: "grant", userId, coins, apples, cards: {id: n}, shards: {rarity: n}, note }
  *        adds (or, with negative numbers, removes) currency, cards and shards in one atomic step; logged with the admin
+ *   POST { action: "setPassword", userId, password }
+ *        a new password for a player who forgot theirs (they sign in with their email); every session of the player
+ *        ends, and the change is logged with the admin (never the password)
  */
 /** The list price of a store product in dollars (Google charges local prices; this is the base price set in Play Console). */
 const usdOf = productId => Number(ECONOMY.appleProducts.find(p => p.id === productId)?.usd || 0);
@@ -111,6 +114,7 @@ export async function handler(event) {
 
     if (event.httpMethod !== "POST") return methodNotAllowed(["GET", "POST"]);
     const body = await readJson(event);
+    if (body.action === "setPassword") return json(200, await setPassword(sql, admin, body));
     if (body.action !== "grant") throw httpError(400, "unknown_action");
     const userId = String(body.userId || "");
     const [user] = await sql`select id from app_users where id::text = ${userId}`;
@@ -174,6 +178,21 @@ export async function handler(event) {
   } catch (error) {
     return handleError(error);
   }
+}
+
+async function setPassword(sql, admin, body) {
+  const password = typeof body.password === "string" ? body.password : "";
+  if (password.length < 8) throw httpError(400, "weak_password");
+  if (password.length > 200) throw httpError(400, "password_too_long");
+  const [user] = await sql`select id, email from app_users where id::text = ${String(body.userId || "")}`;
+  if (!user) throw httpError(404, "player_not_found");
+  // a password signs in together with the email: an account without one cannot use it
+  if (!user.email) throw httpError(400, "no_email");
+  await sql`update app_users set password_hash = ${passwordHash(password)}, updated_at = now() where id = ${user.id}`;
+  await sql`delete from user_sessions where user_id = ${user.id}`;
+  try { await sql`delete from password_reset_tokens where user_id = ${user.id}`; } catch { /* old table gone */ }
+  await sql`insert into economy_events (user_id, kind, detail) values (${user.id}, 'admin_password', ${JSON.stringify({ by: admin.id })}::jsonb)`;
+  return { ok: true };
 }
 
 async function playerDetail(sql, id) {

@@ -7,9 +7,6 @@ export const LIMITS = {
   login: { limit: 20, windowSeconds: 600 },          // per IP
   loginEmail: { limit: 10, windowSeconds: 600 },     // per email: slows password guessing on one account
   register: { limit: 10, windowSeconds: 3600 },      // per IP
-  resetRequest: { limit: 5, windowSeconds: 3600 },   // per IP
-  resetEmail: { limit: 3, windowSeconds: 3600 },     // per email: no mail flooding
-  resetPassword: { limit: 20, windowSeconds: 3600 }, // per IP
   platformLogin: { limit: 30, windowSeconds: 600 },  // per IP
   economy: { limit: 90, windowSeconds: 60 },         // per user
   deck: { limit: 30, windowSeconds: 60 },            // per user

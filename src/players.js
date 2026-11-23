@@ -164,6 +164,7 @@ export async function renderPlayer(root, id) {
       activityPanel(matchTotals, matches),
       rankPanel(player.id, data.rank, player.nickname, data.leagues, () => renderPlayer(root, id)),
       grantPanel(player.id, show),
+      passwordPanel(player, () => renderPlayer(root, id)),
       collectionPanel(state),
       historyPanel(events));
   }
@@ -289,6 +290,42 @@ function grantPanel(userId, onResult) {
     cardRows,
     h("button", { type: "button", class: "btn ghost", onclick: addCardRow }, icon("plus"), t("addCardRow")),
     note,
+    h("div", { class: "actions" }, go));
+}
+
+// ------------------------------------------------------------------ password
+
+/** A password nobody has to read twice: no 0/O or 1/l/I. */
+function randomPassword(length = 10) {
+  const abc = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint32Array(length));
+  return Array.from(bytes, b => abc[b % abc.length]).join("");
+}
+
+/** A new password for a player who forgot theirs: they sign in with their email and it, and every old session ends. */
+function passwordPanel(player, refresh) {
+  const panel = (...body) => h("section", { class: "panel", id: "password-panel" },
+    h("h3", { class: "section" }, icon("key"), " ", t("passwordTitle")), ...body);
+  if (!player.email) return panel(h("div", { class: "hint" }, t("passwordNoEmail")));
+
+  const input = h("input", { class: "input grow", type: "text", dir: "ltr", autocomplete: "off", spellcheck: "false", maxlength: "200", placeholder: t("passwordPlaceholder") });
+  const gen = h("button", { type: "button", class: "btn ghost", onclick: () => { input.value = randomPassword(); } }, t("passwordGenerate"));
+  const go = h("button", { type: "button", class: "btn primary" }, t("passwordSet"));
+  go.addEventListener("click", async () => {
+    const password = input.value;
+    if (password.length < 8) { toast(t("passwordShort"), "error"); return; }
+    if (!confirm(t("passwordConfirm", player.email))) return;
+    go.disabled = true;
+    const res = await api.post("admin-players", { action: "setPassword", userId: player.id, password });
+    go.disabled = false;
+    if (!res.ok) { toast(`${t("passwordFailed")} (${res.data.error || res.status})`, "error"); return; }
+    try { await navigator.clipboard?.writeText(password); toast(t("passwordDoneCopied")); }
+    catch { toast(t("passwordDone")); }
+    refresh();
+  });
+  return panel(
+    h("div", { class: "hint" }, t("passwordHint")),
+    h("div", { class: "toolbar" }, input, gen),
     h("div", { class: "actions" }, go));
 }
 

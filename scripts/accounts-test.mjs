@@ -13,7 +13,8 @@ import { handler as linkEmail } from "../netlify/functions/auth-link-email.mjs";
 import { handler as me } from "../netlify/functions/auth-me.mjs";
 import { handler as deleteAccount } from "../netlify/functions/account-delete.mjs";
 import { handler as clientError } from "../netlify/functions/client-error.mjs";
-import { handler as requestReset } from "../netlify/functions/auth-request-reset.mjs";
+import { handler as adminPlayers } from "../netlify/functions/admin-players.mjs";
+import { handler as login } from "../netlify/functions/auth-login.mjs";
 
 const sql = neon(process.env.DATABASE_URL);
 let failures = 0;
@@ -191,13 +192,31 @@ try {
   r = parse(await clientError(ev(null, { errors: [] })));
   check(r.status === 400, "an empty error report is refused");
 
-  // ---- password reset never returns the link outside local development
+  // ---- a forgotten password: an admin sets a new one in the back office (no reset links any more)
   {
-    const before = process.env.RESEND_API_KEY;
-    delete process.env.RESEND_API_KEY;
-    r = parse(await requestReset(ev(null, { email: emailOnly.email })));
-    check(r.status === 200 && r.data.resetUrl === undefined, "password reset does not leak the reset link");
-    if (before) process.env.RESEND_API_KEY = before;
+    const adminUser = await emailUser("admin");
+    made.push(adminUser.id);
+    await sql`update app_users set role = 'admin' where id = ${adminUser.id}`;
+    const player = await emailUser("forgot");
+    made.push(player.id);
+    r = parse(await adminPlayers(ev(player.token, { action: "setPassword", userId: player.id, password: "new-pass-123" })));
+    check(r.status === 403, "only an admin sets a player's password");
+    r = parse(await adminPlayers(ev(adminUser.token, { action: "setPassword", userId: player.id, password: "short" })));
+    check(r.status === 400 && r.data.error === "weak_password", "a short password is refused");
+    r = parse(await adminPlayers(ev(adminUser.token, { action: "setPassword", userId: player.id, password: "new-pass-123" })));
+    check(r.status === 200 && r.data.ok === true, "the admin sets a new password");
+    const [after] = await sql`select (select count(*)::int from user_sessions where user_id = ${player.id}) as sessions,
+      (select count(*)::int from economy_events where user_id = ${player.id} and kind = 'admin_password' and detail ->> 'by' = ${adminUser.id}) as logged`;
+    check(after.sessions === 0, "the player's old sessions end");
+    check(after.logged === 1, "the change is logged with the admin");
+    r = parse(await login(ev(null, { email: player.email, password: "new-pass-123" })));
+    check(r.status === 200 && r.data.user?.id === player.id, "the player signs in with the new password");
+    r = parse(await login(ev(null, { email: player.email, password: "wrong-pass-123" })));
+    check(r.status === 401, "a wrong password still fails");
+    const [noMail] = await sql`insert into app_users (display_name) values ('no-mail') returning id`;
+    made.push(noMail.id);
+    r = parse(await adminPlayers(ev(adminUser.token, { action: "setPassword", userId: noMail.id, password: "new-pass-123" })));
+    check(r.status === 400 && r.data.error === "no_email", "an account without an email gets no password");
   }
 
   // ---- account deletion
