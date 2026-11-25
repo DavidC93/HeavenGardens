@@ -25,7 +25,7 @@ function totals(rows) {
   return out;
 }
 
-/** Longest run of wins, and the current run (wins > 0, losses < 0), newest game first. */
+/** Longest run of wins, and the current run of wins (0 after a loss or a draw), newest game first. */
 function streaks(results) {
   let best = 0, run = 0;
   for (const r of [...results].reverse()) {
@@ -34,9 +34,8 @@ function streaks(results) {
   }
   let current = 0;
   for (const r of results) {
-    if (r === "win") { if (current < 0) break; current++; }
-    else if (r === "draw") break;
-    else { if (current > 0) break; current--; }
+    if (r !== "win") break;
+    current++;
   }
   return { best, current };
 }

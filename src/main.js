@@ -9,6 +9,7 @@ import { renderSettings } from "./settings.js";
 import { renderAi, renderAiDeck } from "./ai.js";
 import { renderRanks } from "./ranks.js";
 import { renderSupport } from "./support.js";
+import { renderErrors } from "./errors.js";
 
 // Heaven Gardens back office: cards (create / edit), players (currency, cards and shards), the computer's decks and levels, and app versions. Admins only.
 const app = document.getElementById("app");
@@ -61,6 +62,7 @@ function renderShell() {
     h("a", { href: "#/ai", "data-tab": "ai" }, icon("sword"), t("ai")),
     h("a", { href: "#/ranks", "data-tab": "ranks" }, icon("shield"), t("ranks")),
     h("a", { href: "#/support", "data-tab": "support" }, icon("mail"), t("supportTab")),
+    h("a", { href: "#/errors", "data-tab": "errors" }, icon("bug"), t("errorsTab")),
     h("a", { href: "#/settings", "data-tab": "settings" }, icon("refresh"), t("settings")));
   clear(app).append(
     h("header", { class: "topbar" },
@@ -88,6 +90,7 @@ function route() {
   window.scrollTo(0, 0);
   if (section === "settings") renderSettings(view);
   else if (section === "support") renderSupport(view);
+  else if (section === "errors") renderErrors(view);
   else if (section === "ranks") renderRanks(view);
   else if (section === "ai") id ? renderAiDeck(view, decodeURIComponent(id)) : renderAi(view);
   else if (section === "players") id ? renderPlayer(view, decodeURIComponent(id)) : renderPlayerList(view);

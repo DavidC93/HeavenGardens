@@ -469,3 +469,7 @@ table.mini td { padding: 4px 6px; border-bottom: 1px solid var(--line2); }
 .support-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .support-message { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0; padding: 10px 12px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line2); font-size: 15px; line-height: 1.5; }
 .support-meta { display: flex; flex-wrap: wrap; gap: 2px; }
+
+.error-stack { margin-top: 8px; }
+.error-stack summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.error-stack pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.45; max-height: 320px; overflow: auto; margin: 8px 0; padding: 10px 12px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line2); }
